@@ -4,6 +4,7 @@ import { getSplitObservation, getCurrentObservations } from "@/lib/dhmz";
 import DashboardGrid from "./_components/dashboard-grid";
 import ChatPanel from "./_components/chat-panel";
 import { IntentProvider } from "./_components/intent-context";
+import MobileChatDrawer from "./_components/mobile-chat-drawer";
 import type { BeachData } from "./_components/tile-beaches";
 import type { WeatherData } from "./_components/tile-weather";
 
@@ -101,6 +102,7 @@ export default async function DashboardPage() {
   );
 }
 
+
 function Legend() {
   const labels = [1, 2, 3, 4].map((n) => ({ n, ...ratingMeta(n) }));
   return (
@@ -126,10 +128,6 @@ function Legend() {
       ))}
     </div>
   );
-}
-
-function MobileChatDrawer() {
-  return null; // chat panel folds into the grid as a future enhancement; lg+ users get the persistent rail
 }
 
 function simpleName(raw: string) {

@@ -34,7 +34,15 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Hanken+Grotesk:ital,wght@0,300..700;1,300..700&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <a
+          href="#hero"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-full focus:bg-[var(--color-navy)] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--color-cream)]"
+        >
+          Skip to content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }
