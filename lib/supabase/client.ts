@@ -1,31 +1,23 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from "./env";
 
 let cached: ReturnType<typeof createBrowserClient> | null = null;
 
 export function createClient() {
   if (cached) return cached;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anon) {
-    // Stub for the dev demo when Supabase isn't wired yet.
-    // We return a minimal "fake" client so the UI doesn't crash.
-    // The real implementation kicks in as soon as env vars are present.
+  if (!isSupabaseConfigured()) {
     return makeFakeBrowserClient();
   }
 
-  cached = createBrowserClient(url, anon);
+  cached = createBrowserClient(supabaseUrl()!, supabasePublishableKey()!);
   return cached;
 }
 
 export function supabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  return isSupabaseConfigured();
 }
 
 type FakeClient = ReturnType<typeof createBrowserClient>;

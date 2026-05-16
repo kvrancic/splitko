@@ -1,20 +1,17 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from "./env";
 
 type CookieSet = { name: string; value: string; options?: CookieOptions };
 
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anon) {
-    // The server-side fake mirrors the browser fake's surface.
+  if (!isSupabaseConfigured()) {
     return makeFakeServerClient(cookieStore);
   }
 
-  return createServerClient(url, anon, {
+  return createServerClient(supabaseUrl()!, supabasePublishableKey()!, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -65,8 +62,5 @@ function makeFakeServerClient(cookieStore: ServerCookieStore) {
 }
 
 export function supabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  return isSupabaseConfigured();
 }
