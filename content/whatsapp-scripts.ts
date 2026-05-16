@@ -1,75 +1,111 @@
 export type Bubble = {
   side: "user" | "splitko";
-  text: string;
+  /** Optional text content. Bubbles without text but with an image render the
+   *  image alone. */
+  text?: string;
   delayMs?: number;
-  /** Optional attachment label rendered in a card style. */
+  /** Renders a labeled "file" card (label + optional sub). */
   attachment?: { label: string; sub?: string };
+  /** Renders a real image block inside the bubble. */
+  image?: { src: string; alt: string };
 };
 
 export type Script = {
-  id: "beach" | "civic" | "obrt";
+  id: "events" | "civic";
   title: string;
   blurb: string;
   bubbles: Bubble[];
 };
 
-export const SCRIPTS: Script[] = [
-  {
-    id: "beach",
-    title: "Beach concierge",
-    blurb: "“idemo na žnjan?” → Splitko picks Kašjuni and a bus.",
-    bubbles: [
-      { side: "user", text: "Idemo na žnjan poslije posla?" },
-      { side: "splitko", text: "Žnjan parking full po prognozi do 19:00.", delayMs: 1100 },
-      { side: "splitko", text: "Kašjuni u 17:30 je bolji – sea izvrsna, vjetar slab, plus bus 12 ti je tu za 4 min.", delayMs: 900 },
-      { side: "user", text: "ajmo onda Kašjuni" },
-      { side: "splitko", text: "Postavljam rutu, javljam ti 10 min prije polaska.", delayMs: 700 },
-    ],
-  },
-  {
-    id: "civic",
-    title: "Civic action",
-    blurb: "Photo of a broken streetlight → ticket inside 90 sec.",
-    bubbles: [
-      {
-        side: "user",
-        text: "Fenjer pukao kod vrtića, šaljem foto",
-      },
-      {
-        side: "user",
-        text: "",
-        attachment: { label: "image · streetlight_42.jpg", sub: "geocoded · Lučac vrtić zone" },
-      },
-      {
-        side: "splitko",
-        text: "Klasificirano: rasvjeta. Routam EVN Split + CC Čistoća.",
-        delayMs: 1100,
-      },
-      {
-        side: "splitko",
-        text: "Ticket #2026-05-1192 — otvoren. Šaljem ti status čim se promijeni.",
-        delayMs: 800,
-      },
-    ],
-  },
-  {
-    id: "obrt",
-    title: "Bureaucracy RAG",
-    blurb: "“kako otvoriti obrt” → personalised checklist.",
-    bubbles: [
-      { side: "user", text: "Kako otvoriti obrt?" },
-      {
-        side: "splitko",
-        text: "Tri stvarna koraka — pickaj NKD šifru na gov.hr, prijavi Poreznoj Split, pa registar HZZO unutar 8 dana.",
-        delayMs: 1100,
-      },
-      {
-        side: "splitko",
-        text: "Šaljem ti checklist + točan ured i radno vrijeme.",
-        delayMs: 700,
-        attachment: { label: "obrt-checklist.pdf", sub: "5 koraka · €55 ukupno" },
-      },
-      { side: "user", text: "savršeno, hvala" },
-    ],
-  },
-];
+export type ScriptBuildOpts = {
+  /** Pexels photo URL used in the civic-action script's image bubble. */
+  civicImage: { src: string; alt: string } | null;
+};
+
+export function buildScripts({ civicImage }: ScriptBuildOpts): Script[] {
+  return [
+    {
+      id: "events",
+      title: "Što se događa danas",
+      blurb: "“Što se događa u Splitu?” → 3 stvari, jedna preporuka.",
+      bubbles: [
+        { side: "user", text: "Što se događa danas u Splitu?" },
+        {
+          side: "splitko",
+          text: "Tri stvari za danas:",
+          delayMs: 1100,
+        },
+        {
+          side: "splitko",
+          text: "🎶 Klape Skalinada · 21:00 · Diocletian's cellars\n⚽ Hajduk – Lokomotiva · 19:30 · TV\n🥖 Manuš summer market · do 22:00",
+          delayMs: 900,
+        },
+        {
+          side: "splitko",
+          text: "Ako ćeš s djecom — market do 22h je najlakša opcija. Ako ćeš sa ženom kasnije, klape u podrumima su rezerviraj odmah.",
+          delayMs: 1100,
+        },
+        { side: "user", text: "ajmo klape, rezerviraj nam dva mjesta" },
+        {
+          side: "splitko",
+          text: "Dvije ulaznice, 21:00, podrumi. Šaljem QR kodove odmah.",
+          delayMs: 900,
+          attachment: {
+            label: "klape-skalinada-2x.pdf",
+            sub: "QR kodovi · podrumi · 21:00",
+          },
+        },
+        {
+          side: "splitko",
+          text: "Imaš slobodno parking u Sukoišanu do 20:50, javljam te kad krene puniti.",
+          delayMs: 700,
+        },
+      ],
+    },
+    {
+      id: "civic",
+      title: "Prijavi kvar u kvartu",
+      blurb: "Fotka rupe na cesti → ticket za 90 sec.",
+      bubbles: [
+        {
+          side: "user",
+          text: "Vidim rupu na cesti kod Lučca, neka netko ovo prijavi",
+        },
+        ...(civicImage
+          ? ([
+              {
+                side: "user",
+                delayMs: 700,
+                image: civicImage,
+              } satisfies Bubble,
+            ])
+          : []),
+        {
+          side: "splitko",
+          text: "Klasificiram fotku…",
+          delayMs: 1100,
+        },
+        {
+          side: "splitko",
+          text: "Klasificirano: cestovna rupa. Geokodiram lokaciju.",
+          delayMs: 900,
+        },
+        {
+          side: "splitko",
+          text: "Lokacija: Domovinskog rata 22, Lučac. Šaljem Hrvatskim cestama + CC Gradu Splitu.",
+          delayMs: 900,
+        },
+        {
+          side: "splitko",
+          text: "Ticket #2026-05-1192 — otvoren. Javim ti čim se promijeni status.",
+          delayMs: 800,
+          attachment: {
+            label: "Ticket #2026-05-1192",
+            sub: "Hrvatske ceste · otvoren · 14:32",
+          },
+        },
+        { side: "user", text: "hvala" },
+      ],
+    },
+  ];
+}

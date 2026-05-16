@@ -2,45 +2,51 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import PhoneShell from "@/components/phone-mock";
 import { Wordmark } from "@/components/ui/wordmark";
 import { ease } from "@/lib/motion";
-import { SCRIPTS, type Bubble } from "@/content/whatsapp-scripts";
+import type { Bubble, Script } from "@/content/whatsapp-scripts";
 
-export default function WhatsappView() {
-  const [active, setActive] = useState(SCRIPTS[0]!.id);
-  const script = SCRIPTS.find((s) => s.id === active)!;
+export default function WhatsappView({ scripts }: { scripts: Script[] }) {
+  const [active, setActive] = useState<Script["id"]>(scripts[0]!.id);
+  const script = scripts.find((s) => s.id === active)!;
   const [played, setPlayed] = useState<Bubble[]>([]);
   const [playing, setPlaying] = useState(false);
   const [typingSide, setTypingSide] = useState<"user" | "splitko" | null>(null);
-  const cancelRef = useRef(false);
+  const runIdRef = useRef(0);
 
   useEffect(() => {
-    play(script);
+    void play(script);
     return () => {
-      cancelRef.current = true;
+      // Bumping the run id makes any in-flight loop exit on its next check.
+      runIdRef.current += 1;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  async function play(s: typeof script) {
-    cancelRef.current = true;
-    await new Promise((r) => setTimeout(r, 80));
-    cancelRef.current = false;
+  async function play(s: Script) {
+    const myId = ++runIdRef.current;
     setPlayed([]);
     setPlaying(true);
+    setTypingSide(null);
+
     for (const b of s.bubbles) {
-      if (cancelRef.current) return;
+      if (runIdRef.current !== myId) return;
       const delay = b.delayMs ?? 600;
       setTypingSide(b.side);
       await wait(delay);
-      if (cancelRef.current) return;
+      if (runIdRef.current !== myId) return;
       setTypingSide(null);
       setPlayed((prev) => [...prev, b]);
       await wait(280);
     }
-    setPlaying(false);
+
+    if (runIdRef.current === myId) {
+      setPlaying(false);
+      setTypingSide(null);
+    }
   }
 
   return (
@@ -89,8 +95,8 @@ export default function WhatsappView() {
 
           <div className="mt-6">
             <div className="mono-tag opacity-70">Scripted demo</div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-3">
-              {SCRIPTS.map((s) => (
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {scripts.map((s) => (
                 <li key={s.id}>
                   <button
                     type="button"
@@ -129,7 +135,7 @@ export default function WhatsappView() {
               href="/voice"
               className="rounded-full border border-[var(--color-cream)]/40 px-4 py-2 text-sm font-semibold hover:bg-[var(--color-cream)]/10"
             >
-              Listen to baka Anka →
+              Listen to a call →
             </Link>
           </div>
         </div>
@@ -143,7 +149,7 @@ export default function WhatsappView() {
               <div className="flex flex-col gap-2">
                 <AnimatePresence initial={false}>
                   {played.map((b, i) => (
-                    <Bubble key={i} bubble={b} />
+                    <BubbleView key={i} bubble={b} />
                   ))}
                   {typingSide && <TypingIndicator side={typingSide} />}
                 </AnimatePresence>
@@ -157,8 +163,10 @@ export default function WhatsappView() {
   );
 }
 
-function Bubble({ bubble }: { bubble: Bubble }) {
+function BubbleView({ bubble }: { bubble: Bubble }) {
   const isUser = bubble.side === "user";
+  const onlyImage =
+    !bubble.text && !bubble.attachment && Boolean(bubble.image);
   return (
     <motion.div
       layout
@@ -171,7 +179,7 @@ function Bubble({ bubble }: { bubble: Bubble }) {
       }}
     >
       <div
-        className="rounded-2xl px-3 py-2 text-[13.5px] leading-snug"
+        className={`rounded-2xl text-[13.5px] leading-snug ${onlyImage ? "p-1" : "px-3 py-2"}`}
         style={{
           background: isUser ? "oklch(0.96 0.05 145)" : "var(--color-cream)",
           color: "var(--color-ink)",
@@ -180,12 +188,38 @@ function Bubble({ bubble }: { bubble: Bubble }) {
           borderBottomRightRadius: isUser ? 4 : 14,
         }}
       >
-        {bubble.text && <div>{bubble.text}</div>}
+        {bubble.image && (
+          <div
+            className="relative overflow-hidden rounded-xl"
+            style={{
+              width: 220,
+              height: 165,
+              background: "var(--color-cream-deep)",
+            }}
+          >
+            <Image
+              src={bubble.image.src}
+              alt={bubble.image.alt}
+              fill
+              sizes="220px"
+              className="object-cover"
+            />
+          </div>
+        )}
+        {bubble.text && (
+          <div
+            className={bubble.image ? "px-2 pt-2" : ""}
+            style={{ whiteSpace: "pre-line" }}
+          >
+            {bubble.text}
+          </div>
+        )}
         {bubble.attachment && (
           <div
             className="mt-1.5 rounded-lg px-2 py-1.5 text-[11px]"
             style={{
-              background: "color-mix(in oklch, var(--color-navy) 8%, transparent)",
+              background:
+                "color-mix(in oklch, var(--color-navy) 8%, transparent)",
               border:
                 "1px solid color-mix(in oklch, var(--color-navy) 30%, transparent)",
             }}
@@ -197,7 +231,7 @@ function Bubble({ bubble }: { bubble: Bubble }) {
           </div>
         )}
         <div
-          className="mt-1 text-[10px] opacity-55"
+          className={`text-[10px] opacity-55 ${onlyImage ? "px-2 pb-1.5" : "mt-1"}`}
           style={{ textAlign: isUser ? "right" : "left" }}
         >
           14:32 {isUser && "✓✓"}

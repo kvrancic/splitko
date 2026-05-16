@@ -7,45 +7,53 @@ import Persona from "@/components/persona";
 import PhoneShell from "@/components/phone-mock";
 import { Wordmark } from "@/components/ui/wordmark";
 import { ease } from "@/lib/motion";
-import { VOICE_SCRIPT, type VoiceLine } from "@/content/voice-script";
+import { VOICE_SCRIPTS, type VoiceLine, type VoiceScript } from "@/content/voice-script";
 
-type Stage = "incoming" | "ringing" | "live" | "transferred";
+type Stage = "incoming" | "ringing" | "live" | "ended";
 
 export default function VoiceView() {
+  const [active, setActive] = useState<VoiceScript["id"]>(VOICE_SCRIPTS[0]!.id);
+  const script = VOICE_SCRIPTS.find((s) => s.id === active)!;
   const [stage, setStage] = useState<Stage>("incoming");
   const [lines, setLines] = useState<VoiceLine[]>([]);
   const [speaker, setSpeaker] = useState<VoiceLine["speaker"] | null>(null);
-  const cancelRef = useRef(false);
+  const runIdRef = useRef(0);
+
+  // Reset call state whenever the user switches scripts.
+  useEffect(() => {
+    runIdRef.current += 1;
+    setStage("incoming");
+    setLines([]);
+    setSpeaker(null);
+  }, [active]);
 
   useEffect(() => {
     return () => {
-      cancelRef.current = true;
+      runIdRef.current += 1;
     };
   }, []);
 
   async function pickUp() {
-    cancelRef.current = false;
+    const myId = ++runIdRef.current;
     setStage("ringing");
     await wait(900);
-    if (cancelRef.current) return;
+    if (runIdRef.current !== myId) return;
     setStage("live");
     setLines([]);
-    for (let i = 0; i < VOICE_SCRIPT.length; i++) {
-      if (cancelRef.current) return;
-      const l = VOICE_SCRIPT[i]!;
+    for (const l of script.lines) {
+      if (runIdRef.current !== myId) return;
       setSpeaker(l.speaker);
       setLines((prev) => [...prev, l]);
       await wait(l.durationMs);
-      if (cancelRef.current) return;
-      if (l.speaker === "splitko" && l.text.startsWith("Prebacujem")) {
-        setStage("transferred");
-      }
     }
-    setSpeaker(null);
+    if (runIdRef.current === myId) {
+      setSpeaker(null);
+      setStage("ended");
+    }
   }
 
   function reset() {
-    cancelRef.current = true;
+    runIdRef.current += 1;
     setStage("incoming");
     setLines([]);
     setSpeaker(null);
@@ -91,16 +99,47 @@ export default function VoiceView() {
           </h1>
           <p className="body-lg max-w-[44ch] opacity-85">
             Voice was expensive in 2022 and is no longer expensive in 2026. A
-            grandmother dials a number on a magnet on her fridge. The agent
-            picks up in the Dalmatian she actually speaks.
+            citizen dials a number on a magnet on the fridge. The agent picks
+            up in the Dalmatian they actually speak.
           </p>
 
+          <div className="mt-6">
+            <div className="mono-tag opacity-70">Scripted demo</div>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {VOICE_SCRIPTS.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => setActive(s.id)}
+                    className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors ${
+                      active === s.id
+                        ? "border-[var(--color-cream)] bg-[var(--color-cream)]/12"
+                        : "border-[var(--color-cream)]/25 hover:border-[var(--color-cream)]/60"
+                    }`}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {s.title}
+                    </div>
+                    <div className="mono-tag opacity-70">{s.blurb}</div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="rounded-2xl border border-[var(--color-cream)]/25 p-5">
-            <div className="mono-tag opacity-70">Inbound call · baka Anka</div>
+            <div className="mono-tag opacity-70">
+              Inbound call · {script.callerName} · {script.callerWhere}
+            </div>
             <p className="mt-2 text-[var(--color-cream)]/85">
-              Anka, 76, dials 0800 SPLIT from her landline. She has a
-              prescription she doesn’t understand. The agent walks her through
-              it and transfers her to KBC reception with a briefing.
+              {script.callerName} dials 0800 21 21 21 from a landline. The agent
+              answers in their dialect, listens, and walks them through the
+              answer on the line.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -116,7 +155,7 @@ export default function VoiceView() {
                     ? "Ringing…"
                     : stage === "live"
                       ? "On the call"
-                      : "Transferred"}
+                      : "Call ended"}
               </button>
               <button
                 type="button"
@@ -132,6 +171,7 @@ export default function VoiceView() {
         <div className="mx-auto">
           <PhoneShell variant="voice">
             <CallBody
+              script={script}
               stage={stage}
               speaker={speaker}
               lines={lines}
@@ -145,11 +185,13 @@ export default function VoiceView() {
 }
 
 function CallBody({
+  script,
   stage,
   speaker,
   lines,
   onPickUp,
 }: {
+  script: VoiceScript;
   stage: Stage;
   speaker: VoiceLine["speaker"] | null;
   lines: VoiceLine[];
@@ -158,21 +200,21 @@ function CallBody({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-col items-center gap-3 pb-2 pt-4">
-        <PortraitForSpeaker speaker={speaker} />
+        <PortraitForSpeaker script={script} speaker={speaker} />
         <div className="text-center">
           <div
             className="display"
             style={{ fontSize: "1.05rem", letterSpacing: "-0.01em" }}
           >
-            {labelFor(speaker, stage)}
+            {labelFor(script, speaker, stage)}
           </div>
           <div className="mono-tag mt-1 opacity-65">
             {stage === "incoming"
               ? "incoming"
               : stage === "ringing"
                 ? "connecting…"
-                : stage === "transferred"
-                  ? "transferred to KBC"
+                : stage === "ended"
+                  ? "call ended"
                   : "on the line"}
           </div>
         </div>
@@ -194,8 +236,8 @@ function CallBody({
               className="mb-2"
             >
               <div className="mono-tag opacity-70">
-                {l.speaker === "anka"
-                  ? "Anka"
+                {l.speaker === "caller"
+                  ? script.callerName
                   : l.speaker === "splitko"
                     ? "Splitko"
                     : "KBC ambulanta"}
@@ -214,8 +256,6 @@ function CallBody({
             </motion.div>
           ))}
         </AnimatePresence>
-
-        {stage === "transferred" && <BriefingCard />}
       </div>
 
       <CallControls stage={stage} onPickUp={onPickUp} />
@@ -224,14 +264,16 @@ function CallBody({
 }
 
 function PortraitForSpeaker({
+  script,
   speaker,
 }: {
+  script: VoiceScript;
   speaker: VoiceLine["speaker"] | null;
 }) {
-  if (speaker === "anka")
+  if (speaker === "caller")
     return (
       <Persona
-        character="anka"
+        character={script.callerCharacter}
         size={72}
         className="overflow-hidden rounded-full bg-[var(--color-cream-shadow)] p-1"
       />
@@ -262,11 +304,16 @@ function PortraitForSpeaker({
   );
 }
 
-function labelFor(speaker: VoiceLine["speaker"] | null, stage: Stage) {
-  if (stage === "incoming") return "Anka K. · 0800 SPLIT";
+function labelFor(
+  script: VoiceScript,
+  speaker: VoiceLine["speaker"] | null,
+  stage: Stage,
+) {
+  if (stage === "incoming")
+    return `${script.callerName} · 0800 21 21 21`;
   if (stage === "ringing") return "Connecting…";
-  if (stage === "transferred") return "KBC ambulanta";
-  if (speaker === "anka") return "Anka K. · Mejaši";
+  if (stage === "ended") return `${script.callerName} · call ended`;
+  if (speaker === "caller") return `${script.callerName} · ${script.callerWhere}`;
   if (speaker === "reception") return "KBC ambulanta";
   return "Splitko · agent";
 }
@@ -293,9 +340,7 @@ function Waveform({
         <motion.span
           key={i}
           animate={
-            active
-              ? { scaleY: [0.4, 1, 0.6, 0.95, 0.5] }
-              : { scaleY: 0.2 }
+            active ? { scaleY: [0.4, 1, 0.6, 0.95, 0.5] } : { scaleY: 0.2 }
           }
           transition={{
             duration: 0.9,
@@ -316,28 +361,6 @@ function Waveform({
         />
       ))}
     </div>
-  );
-}
-
-function BriefingCard() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: ease.outQuart }}
-      className="mt-3 rounded-xl p-3"
-      style={{
-        background: "var(--color-cream-shadow)",
-        border:
-          "1px solid color-mix(in oklch, var(--color-navy) 30%, transparent)",
-      }}
-    >
-      <div className="mono-tag text-[var(--color-red)]">briefing card</div>
-      <p className="mt-1 text-[12px]">
-        Anka K. · DOB 1950-04-12 · prescription clarification only, no new
-        symptoms. Two pills/day with food. Please confirm refill on Aug 14.
-      </p>
-    </motion.div>
   );
 }
 
