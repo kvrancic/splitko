@@ -9,54 +9,66 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { ease } from "@/lib/motion";
 import { VOICE_SCRIPTS, type VoiceLine, type VoiceScript } from "@/content/voice-script";
 
-type Stage = "incoming" | "ringing" | "live" | "ended";
+type Stage = "idle" | "ringing" | "live" | "ended" | "finished";
+
+// Tunable timing knobs.
+const RING_MS = 1100;        // ringing → pick up
+const ENDED_PAUSE_MS = 1400; // gap between call N ending and call N+1 ringing
 
 export default function VoiceView() {
-  const [active, setActive] = useState<VoiceScript["id"]>(VOICE_SCRIPTS[0]!.id);
-  const script = VOICE_SCRIPTS.find((s) => s.id === active)!;
-  const [stage, setStage] = useState<Stage>("incoming");
+  const [scriptIndex, setScriptIndex] = useState(0);
+  const [stage, setStage] = useState<Stage>("idle");
   const [lines, setLines] = useState<VoiceLine[]>([]);
   const [speaker, setSpeaker] = useState<VoiceLine["speaker"] | null>(null);
   const runIdRef = useRef(0);
-
-  // Reset call state whenever the user switches scripts.
-  useEffect(() => {
-    runIdRef.current += 1;
-    setStage("incoming");
-    setLines([]);
-    setSpeaker(null);
-  }, [active]);
+  const script = VOICE_SCRIPTS[scriptIndex] ?? VOICE_SCRIPTS[0]!;
 
   useEffect(() => {
+    void autoplay();
     return () => {
       runIdRef.current += 1;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function pickUp() {
+  async function autoplay() {
     const myId = ++runIdRef.current;
-    setStage("ringing");
-    await wait(900);
-    if (runIdRef.current !== myId) return;
-    setStage("live");
-    setLines([]);
-    for (const l of script.lines) {
+    for (let i = 0; i < VOICE_SCRIPTS.length; i++) {
       if (runIdRef.current !== myId) return;
-      setSpeaker(l.speaker);
-      setLines((prev) => [...prev, l]);
-      await wait(l.durationMs);
-    }
-    if (runIdRef.current === myId) {
+      const s = VOICE_SCRIPTS[i]!;
+      setScriptIndex(i);
+      setLines([]);
+      setSpeaker(null);
+      setStage("ringing");
+      await wait(RING_MS);
+      if (runIdRef.current !== myId) return;
+      setStage("live");
+      for (const l of s.lines) {
+        if (runIdRef.current !== myId) return;
+        setSpeaker(l.speaker);
+        setLines((prev) => [...prev, l]);
+        await wait(l.durationMs);
+      }
+      if (runIdRef.current !== myId) return;
       setSpeaker(null);
       setStage("ended");
+      // Pause before the next call rings in (or before the reel finishes).
+      if (i < VOICE_SCRIPTS.length - 1) {
+        await wait(ENDED_PAUSE_MS);
+      }
+    }
+    if (runIdRef.current === myId) {
+      setStage("finished");
     }
   }
 
-  function reset() {
+  function replay() {
     runIdRef.current += 1;
-    setStage("incoming");
+    setScriptIndex(0);
+    setStage("idle");
     setLines([]);
     setSpeaker(null);
+    void autoplay();
   }
 
   return (
@@ -97,75 +109,35 @@ export default function VoiceView() {
           >
             The most underbuilt surface in civic tech, suddenly cheap.
           </h1>
-          <p className="body-lg max-w-[44ch] opacity-85">
-            Voice was expensive in 2022 and is no longer expensive in 2026. A
-            citizen dials a number on a magnet on the fridge. The agent picks
-            up in the Dalmatian they actually speak.
+          <p className="body-lg max-w-[48ch] opacity-85">
+            Voice was expensive in 2022 and is no longer expensive in 2026.
+            Citizens dial a number, the agent picks up in the Dalmatian they
+            actually speak, and the answer is on the line — no app, no
+            password, no e-Građani login.
+          </p>
+          <p className="body-lg max-w-[48ch] opacity-80">
+            Two inbound calls play below, back to back: a tax-refund question
+            on e-Građani, and a homeowner asking whether they can extend their
+            ground floor in Lučac.
           </p>
 
-          <div className="mt-6">
-            <div className="mono-tag opacity-70">Scripted demo</div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {VOICE_SCRIPTS.map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => setActive(s.id)}
-                    className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors ${
-                      active === s.id
-                        ? "border-[var(--color-cream)] bg-[var(--color-cream)]/12"
-                        : "border-[var(--color-cream)]/25 hover:border-[var(--color-cream)]/60"
-                    }`}
-                  >
-                    <div
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {s.title}
-                    </div>
-                    <div className="mono-tag opacity-70">{s.blurb}</div>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-wrap gap-2 pt-3">
+            <button
+              type="button"
+              onClick={replay}
+              className="rounded-full bg-[var(--color-cream)] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+            >
+              Replay
+            </button>
+            <Link
+              href="/whatsapp"
+              className="rounded-full border border-[var(--color-cream)]/40 px-4 py-2 text-sm font-semibold hover:bg-[var(--color-cream)]/10"
+            >
+              See WhatsApp →
+            </Link>
           </div>
 
-          <div className="rounded-2xl border border-[var(--color-cream)]/25 p-5">
-            <div className="mono-tag opacity-70">
-              Inbound call · {script.callerName} · {script.callerWhere}
-            </div>
-            <p className="mt-2 text-[var(--color-cream)]/85">
-              {script.callerName} dials 0800 21 21 21 from a landline. The agent
-              answers in their dialect, listens, and walks them through the
-              answer on the line.
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={pickUp}
-                disabled={stage === "live" || stage === "ringing"}
-                className="rounded-full bg-[var(--color-red)] px-4 py-2 text-sm font-semibold text-[var(--color-cream)] hover:bg-[var(--color-red-hot)] disabled:opacity-60"
-              >
-                {stage === "incoming"
-                  ? "Pick up the call"
-                  : stage === "ringing"
-                    ? "Ringing…"
-                    : stage === "live"
-                      ? "On the call"
-                      : "Call ended"}
-              </button>
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-full border border-[var(--color-cream)]/30 px-4 py-2 text-sm font-semibold hover:border-[var(--color-cream)]"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
+          <ScriptProgress index={scriptIndex} stage={stage} />
         </div>
 
         <div className="mx-auto">
@@ -175,7 +147,6 @@ export default function VoiceView() {
               stage={stage}
               speaker={speaker}
               lines={lines}
-              onPickUp={pickUp}
             />
           </PhoneShell>
         </div>
@@ -184,23 +155,70 @@ export default function VoiceView() {
   );
 }
 
+function ScriptProgress({
+  index,
+  stage,
+}: {
+  index: number;
+  stage: Stage;
+}) {
+  return (
+    <ul className="mt-2 flex flex-col gap-1.5 text-[13px] opacity-90">
+      {VOICE_SCRIPTS.map((s, i) => {
+        const state =
+          i < index
+            ? "done"
+            : i === index
+              ? stage === "ended" || stage === "finished"
+                ? "done"
+                : stage === "live" || stage === "ringing"
+                  ? "playing"
+                  : "queued"
+              : "queued";
+        const dot =
+          state === "done"
+            ? "var(--color-green-good)"
+            : state === "playing"
+              ? "var(--color-red)"
+              : "color-mix(in oklch, var(--color-cream) 40%, transparent)";
+        return (
+          <li key={s.id} className="flex items-center gap-2">
+            <span
+              aria-hidden
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                background: dot,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontWeight: state === "playing" ? 700 : 500 }}>
+              {s.title}
+            </span>
+            <span className="mono-tag opacity-60">— {s.blurb}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function CallBody({
   script,
   stage,
   speaker,
   lines,
-  onPickUp,
 }: {
   script: VoiceScript;
   stage: Stage;
   speaker: VoiceLine["speaker"] | null;
   lines: VoiceLine[];
-  onPickUp: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-col items-center gap-3 pb-2 pt-4">
-        <PortraitForSpeaker script={script} speaker={speaker} />
+        <PortraitForSpeaker script={script} speaker={speaker} stage={stage} />
         <div className="text-center">
           <div
             className="display"
@@ -209,13 +227,15 @@ function CallBody({
             {labelFor(script, speaker, stage)}
           </div>
           <div className="mono-tag mt-1 opacity-65">
-            {stage === "incoming"
-              ? "incoming"
+            {stage === "idle"
+              ? "standing by…"
               : stage === "ringing"
                 ? "connecting…"
                 : stage === "ended"
                   ? "call ended"
-                  : "on the line"}
+                  : stage === "finished"
+                    ? "reel ended"
+                    : "on the line"}
           </div>
         </div>
       </div>
@@ -229,7 +249,7 @@ function CallBody({
         <AnimatePresence initial={false}>
           {lines.map((l, i) => (
             <motion.div
-              key={i}
+              key={`${script.id}:${i}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: ease.outQuart }}
@@ -258,7 +278,7 @@ function CallBody({
         </AnimatePresence>
       </div>
 
-      <CallControls stage={stage} onPickUp={onPickUp} />
+      <CallControlsBar />
     </div>
   );
 }
@@ -266,11 +286,17 @@ function CallBody({
 function PortraitForSpeaker({
   script,
   speaker,
+  stage,
 }: {
   script: VoiceScript;
   speaker: VoiceLine["speaker"] | null;
+  stage: Stage;
 }) {
-  if (speaker === "caller")
+  // While ringing or in-between calls, show the inbound caller's portrait so
+  // it's obvious who is dialing.
+  const showCaller =
+    speaker === "caller" || stage === "ringing" || stage === "ended";
+  if (showCaller)
     return (
       <Persona
         character={script.callerCharacter}
@@ -309,10 +335,10 @@ function labelFor(
   speaker: VoiceLine["speaker"] | null,
   stage: Stage,
 ) {
-  if (stage === "incoming")
-    return `${script.callerName} · 0800 21 21 21`;
-  if (stage === "ringing") return "Connecting…";
+  if (stage === "idle") return "Splitko 0800 21 21 21";
+  if (stage === "ringing") return `${script.callerName} · 0800 21 21 21`;
   if (stage === "ended") return `${script.callerName} · call ended`;
+  if (stage === "finished") return "Splitko · standing by";
   if (speaker === "caller") return `${script.callerName} · ${script.callerWhere}`;
   if (speaker === "reception") return "KBC ambulanta";
   return "Splitko · agent";
@@ -364,42 +390,7 @@ function Waveform({
   );
 }
 
-function CallControls({
-  stage,
-  onPickUp,
-}: {
-  stage: Stage;
-  onPickUp: () => void;
-}) {
-  if (stage === "incoming") {
-    return (
-      <div className="flex items-center justify-around py-3">
-        <button
-          type="button"
-          onClick={onPickUp}
-          className="flex h-12 w-12 items-center justify-center rounded-full text-[20px]"
-          style={{
-            background: "oklch(0.55 0.22 145)",
-            color: "var(--color-cream)",
-          }}
-          aria-label="Answer"
-        >
-          ☎
-        </button>
-        <button
-          type="button"
-          className="flex h-12 w-12 items-center justify-center rounded-full text-[20px]"
-          style={{
-            background: "oklch(0.5 0.22 25)",
-            color: "var(--color-cream)",
-          }}
-          aria-label="Decline"
-        >
-          ✕
-        </button>
-      </div>
-    );
-  }
+function CallControlsBar() {
   return (
     <div className="flex items-center justify-center gap-3 py-3 text-[var(--color-ink-soft)]">
       <ControlBubble label="mute">
@@ -408,17 +399,16 @@ function CallControls({
       <ControlBubble label="keypad">
         <span aria-hidden>#</span>
       </ControlBubble>
-      <button
-        type="button"
+      <div
         className="flex h-12 w-12 items-center justify-center rounded-full"
         style={{
           background: "oklch(0.5 0.22 25)",
           color: "var(--color-cream)",
         }}
-        aria-label="End"
+        aria-hidden
       >
         ✕
-      </button>
+      </div>
     </div>
   );
 }
@@ -431,13 +421,12 @@ function ControlBubble({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
+    <div
       aria-label={label}
       className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-cream-shadow)] text-[var(--color-ink)]"
     >
       {children}
-    </button>
+    </div>
   );
 }
 
