@@ -24,20 +24,30 @@ export default function DashboardShell({
       <button
         type="button"
         aria-expanded={chatOpen}
+        aria-label={chatOpen ? "Hide chat" : "Open chat"}
+        title={chatOpen ? "Hide chat" : "Open chat"}
         aria-controls="splitko-chat-overlay"
         onClick={() => setChatOpen(!chatOpen)}
-        className="fixed top-1/2 z-40 hidden -translate-y-1/2 items-center gap-1.5 rounded-l-2xl py-5 pl-3 pr-2 text-xs font-semibold shadow-lg transition-all lg:flex"
+        className="group fixed top-1/2 z-40 hidden -translate-y-1/2 items-center gap-2 rounded-l-2xl py-3.5 pl-3 pr-3 text-sm font-semibold shadow-lg transition-all lg:inline-flex"
         style={{
           right: chatOpen ? PANEL_WIDTH : 0,
           background: "var(--color-navy)",
           color: "var(--color-cream)",
-          writingMode: "vertical-rl",
         }}
       >
-        <span aria-hidden style={{ writingMode: "horizontal-tb" }}>
+        <span
+          aria-hidden
+          className="grid h-7 w-7 place-items-center rounded-full text-base"
+          style={{
+            background:
+              "color-mix(in oklch, var(--color-cream) 18%, transparent)",
+          }}
+        >
+          💬
+        </span>
+        <span aria-hidden style={{ fontSize: "1.1em", lineHeight: 1 }}>
           {chatOpen ? "›" : "‹"}
         </span>
-        <span>{chatOpen ? "Hide chat" : "Open chat"}</span>
       </button>
 
       {/* Overlay drawer */}
