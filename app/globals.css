@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+/* ---- Splitko design tokens (OKLCH, brand: Hajduk Programme 2026) ---- */
+@theme {
+  /* Surface tokens */
+  --color-cream: oklch(0.962 0.012 75);
+  --color-cream-shadow: oklch(0.918 0.015 75);
+  --color-cream-deep: oklch(0.87 0.018 78);
+  --color-ink: oklch(0.18 0.025 255);
+  --color-ink-soft: oklch(0.28 0.025 255);
+
+  /* Identity */
+  --color-navy: oklch(0.215 0.075 257);
+  --color-navy-soft: oklch(0.275 0.062 257);
+  --color-navy-mist: oklch(0.36 0.055 257);
+  --color-red: oklch(0.55 0.205 25);
+  --color-red-hot: oklch(0.62 0.235 25);
+  --color-red-soft: oklch(0.74 0.13 25);
+
+  /* Data semantics */
+  --color-teal: oklch(0.555 0.105 195);
+  --color-teal-soft: oklch(0.75 0.06 195);
+  --color-green-good: oklch(0.66 0.16 145);
+  --color-amber-warn: oklch(0.78 0.16 75);
+
+  /* Typography */
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  /* Easing */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Reset & base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "ss02", "kern" 1, "calt" 1;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-red);
+  color: var(--color-cream);
+}
+
+/* ---- Reusable utility primitives ---- */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 85%;
+  letter-spacing: -0.022em;
+  line-height: 0.95;
+}
+
+.body-lg {
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 0.97rem + 0.4vw, 1.18rem);
+  line-height: 1.55;
+}
+
+.mono-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Focus ring — visible on both navy and cream surfaces */
+:focus-visible {
+  outline: 2px solid var(--color-red-hot);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Horizontal-pin shell used by the global funnel section */
+.h-pin {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.h-pin__track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Reduced motion: disable transform-driven entrance choreography */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Variable font axes for Bricolage */
+.display-tight {
+  font-stretch: 75%;
+  letter-spacing: -0.028em;
+}
+
+.display-wide {
+  font-stretch: 100%;
+  letter-spacing: -0.01em;
+}
+
+/* Helpers */
+.surface-navy {
+  background: var(--color-navy);
+  color: var(--color-cream);
+}
+.surface-cream {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+.surface-red {
+  background: var(--color-red);
+  color: var(--color-cream);
+}
+
+/* Hide scrollbars on inner scrollers (used in beach carousel etc.) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
