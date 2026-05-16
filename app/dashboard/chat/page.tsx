@@ -1,83 +1,70 @@
+import { findHeroPhoto } from "@/lib/pexels";
 import ChatView from "./chat-view";
 
 export const metadata = { title: "Chat · Splitko" };
 
 const TOOLS = [
   {
-    id: "dhmz",
-    name: "DHMZ",
-    desc: "Live observations from every Croatian station, sea + UV.",
-    badge: "REAL",
+    id: "weather",
+    name: "Weather",
+    desc: "Live temperature, wind, sea conditions from DHMZ.",
   },
   {
-    id: "izor",
-    name: "IZOR",
-    desc: "Public sea-quality samples for ~7,000 Adriatic locations.",
-    badge: "REAL",
+    id: "sea-quality",
+    name: "Sea quality",
+    desc: "Public IZOR rating for every Adriatic beach.",
   },
   {
-    id: "promet-bus",
-    name: "Promet Buses",
-    desc: "Live vehicle positions + crowdsourced load taps.",
-    badge: "mock",
+    id: "buses",
+    name: "Buses",
+    desc: "Where the bus is now, and when it reaches your stop.",
   },
   {
-    id: "promet-park",
-    name: "Promet Parking",
-    desc: "Per-bay sensor grid, dynamic pricing readout.",
-    badge: "mock",
+    id: "parking",
+    name: "Parking",
+    desc: "Which lots have free bays, and what they cost right now.",
   },
   {
-    id: "vision",
-    name: "Webcam Vision",
-    desc: "Crowd density + smoke detection from public webcams.",
-    badge: "mock",
+    id: "ferries",
+    name: "Ferries",
+    desc: "Jadrolinija departures to Brač, Hvar, Šolta.",
   },
   {
-    id: "egradani",
-    name: "e-Građani RAG",
-    desc: "Read-only retrieval over gov.hr and katalog službi.",
-    badge: "mock",
+    id: "events",
+    name: "Tonight in Split",
+    desc: "Concerts, markets, Hajduk match, kid-friendly things.",
   },
   {
-    id: "statute",
-    name: "City Statute",
-    desc: "Statute of the City of Split, with citations.",
-    badge: "mock",
+    id: "bureaucracy",
+    name: "Bureaucracy help",
+    desc: "Plain-language steps for obrt, prijava, vehicle papers.",
   },
   {
-    id: "gup",
-    name: "GUP",
-    desc: "Urbanistički plan extracts per address.",
-    badge: "mock",
-  },
-  {
-    id: "calendar",
-    name: "Cultural Calendar",
-    desc: "Klape, Hajduk, parish, market, festival schedule.",
-    badge: "mock",
-  },
-  {
-    id: "kbc",
-    name: "KBC Public Queue",
-    desc: "Estimated waits + scheduling support.",
-    badge: "mock",
+    id: "civic",
+    name: "Report something",
+    desc: "Photo of a problem in the city — Splitko routes it.",
   },
   {
     id: "marketplace",
     name: "Marketplace",
-    desc: "Agent-to-agent matching, sublets first.",
-    badge: "mock",
+    desc: "Match with a tenant, a sublet, or a buyer near you.",
   },
   {
-    id: "router",
-    name: "Civic Action Router",
-    desc: "Classifies citizen reports, routes them to the right office.",
-    badge: "mock",
+    id: "kbc",
+    name: "Call a human",
+    desc: "Place a call to KBC, MUP, your library, brief them first.",
   },
 ];
 
-export default function ChatPage() {
+export const revalidate = 3600;
+
+export default async function ChatPage() {
+  const heroPhoto = await findHeroPhoto([
+    "split croatia waterfront sunset",
+    "split croatia old town",
+    "dalmatia coast",
+  ]);
+
   return (
     <div className="mx-auto grid max-w-screen-2xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr] lg:px-6 lg:py-6">
       <aside
@@ -88,7 +75,9 @@ export default function ChatPage() {
             "1px solid color-mix(in oklch, var(--color-ink) 8%, transparent)",
         }}
       >
-        <div className="mono-tag text-[var(--color-ink-soft)]">Tools & ports</div>
+        <div className="mono-tag text-[var(--color-ink-soft)]">
+          What I can do
+        </div>
         <ul className="mt-3 space-y-1.5">
           {TOOLS.map((t) => (
             <li
@@ -99,33 +88,15 @@ export default function ChatPage() {
                   "1px solid color-mix(in oklch, var(--color-ink) 6%, transparent)",
               }}
             >
-              <div className="flex items-center justify-between">
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {t.name}
-                </div>
-                <span
-                  className="mono-tag rounded-full px-1.5 py-0.5"
-                  style={{
-                    background:
-                      t.badge === "REAL"
-                        ? "var(--color-red)"
-                        : "color-mix(in oklch, var(--color-ink) 12%, transparent)",
-                    color:
-                      t.badge === "REAL"
-                        ? "var(--color-cream)"
-                        : "var(--color-ink-soft)",
-                    fontSize: "0.55rem",
-                  }}
-                >
-                  {t.badge}
-                </span>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 600,
+                }}
+              >
+                {t.name}
               </div>
-              <p className="mt-1 text-[11.5px] text-[var(--color-ink-soft)] leading-snug">
+              <p className="mt-1 text-[12px] text-[var(--color-ink-soft)] leading-snug">
                 {t.desc}
               </p>
             </li>
@@ -142,7 +113,13 @@ export default function ChatPage() {
           height: "calc(100dvh - 90px)",
         }}
       >
-        <ChatView />
+        <ChatView
+          heroPhoto={
+            heroPhoto
+              ? { src: heroPhoto.src.large, alt: heroPhoto.alt || "Split" }
+              : null
+          }
+        />
       </main>
     </div>
   );

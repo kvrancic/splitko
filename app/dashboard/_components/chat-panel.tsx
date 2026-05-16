@@ -1,9 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { INTENTS, type IntentId, type ToolCall } from "@/lib/intents";
-import { ease } from "@/lib/motion";
+import { type IntentId, type ToolCall } from "@/lib/intents";
 import { useIntent } from "./intent-context";
 
 type Message =
@@ -184,28 +183,28 @@ export default function ChatPanel() {
 function EmptyState({ onPick }: { onPick: (q: string) => void }) {
   return (
     <div className="space-y-3 text-[var(--color-ink-soft)]">
-      <p className="body-lg">
-        Type a question, or pick one. The dashboard reconfigures around what
-        you ask.
+      <p className="text-[14px] leading-snug">
+        Type a question, or tap one. The dashboard re-arranges around what you
+        ask.
       </p>
-      <ul className="flex flex-wrap gap-2">
-        {STARTER_SUGGESTIONS.map((s) => (
+      <ul className="flex flex-col gap-1.5">
+        {STARTER_SUGGESTIONS.slice(0, 5).map((s) => (
           <li key={s}>
             <button
               type="button"
               onClick={() => onPick(s)}
-              className="rounded-full border border-[var(--color-ink)]/15 px-3 py-1.5 text-left text-xs font-medium transition-colors hover:border-[var(--color-ink)] hover:bg-[var(--color-cream-shadow)]"
+              className="w-full rounded-xl bg-[var(--color-cream-shadow)] px-3 py-2 text-left text-[13px] font-medium transition-colors hover:bg-[var(--color-cream-deep)]"
+              style={{
+                color: "var(--color-ink)",
+                border:
+                  "1px solid color-mix(in oklch, var(--color-ink) 10%, transparent)",
+              }}
             >
               {s}
             </button>
           </li>
         ))}
       </ul>
-      <div className="mono-tag pt-2 text-[var(--color-ink-soft)] opacity-60">
-        Real ports: {INTENTS.filter((i) => i.toolCalls.some((t) => t.real)).length}
-        {" / "}
-        Mocked ports: {INTENTS.length}
-      </div>
     </div>
   );
 }
@@ -283,28 +282,10 @@ function ToolCallLine({
           </motion.span>
         )}
       </span>
-      <span className="truncate font-mono">
-        {tc.name}
+      <span className="truncate">
+        <span style={{ fontWeight: 600 }}>{humaniseToolName(tc.name)}</span>
         {tc.args && (
-          <span className="opacity-60">({tc.args})</span>
-        )}
-        {tc.real && (
-          <AnimatePresence>
-            {tc.done && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="ml-2 inline-block rounded px-1 text-[9px] font-bold"
-                style={{
-                  background: "var(--color-red)",
-                  color: "var(--color-cream)",
-                }}
-              >
-                REAL
-              </motion.span>
-            )}
-          </AnimatePresence>
+          <span className="ml-1 opacity-60">— {tc.args}</span>
         )}
       </span>
       <span className="mono-tag opacity-65">
@@ -312,4 +293,50 @@ function ToolCallLine({
       </span>
     </li>
   );
+}
+
+function humaniseToolName(name: string) {
+  switch (name) {
+    case "getSeaQuality":
+      return "Reading sea quality";
+    case "getCurrentWeather":
+    case "getWeather":
+      return "Checking the weather";
+    case "getWebcamFrame":
+      return "Looking at the webcam";
+    case "getBusETA":
+      return "Asking the bus";
+    case "getTrafficState":
+      return "Checking traffic";
+    case "getParkingSignal":
+      return "Counting parking bays";
+    case "getDynamicPrice":
+      return "Reading parking prices";
+    case "ragLookup":
+      return "Reading gov.hr";
+    case "matchProfile":
+      return "Checking your profile";
+    case "classifyIssue":
+      return "Classifying the photo";
+    case "geocodeFromExif":
+      return "Reading photo location";
+    case "routeToDepartment":
+      return "Routing to the office";
+    case "listMarketSide":
+      return "Listing market side";
+    case "matchCounterparty":
+      return "Finding a counterpart";
+    case "negotiateBand":
+      return "Negotiating the band";
+    case "listEvents":
+      return "Listing what's on";
+    case "transcribeAudio":
+      return "Listening to the recording";
+    case "prepareHandoff":
+      return "Briefing the human";
+    case "getFerry":
+      return "Asking Jadrolinija";
+    default:
+      return name;
+  }
 }

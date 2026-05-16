@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { INTENTS, type Intent, type ToolCall } from "@/lib/intents";
@@ -15,7 +16,9 @@ type Turn =
       realResults: Record<string, unknown>;
     };
 
-export default function ChatView() {
+type HeroPhoto = { src: string; alt: string } | null;
+
+export default function ChatView({ heroPhoto }: { heroPhoto: HeroPhoto }) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -91,17 +94,14 @@ export default function ChatView() {
       <header className="flex items-center justify-between border-b border-[var(--color-ink)]/10 px-5 py-3">
         <div>
           <div className="mono-tag text-[var(--color-ink-soft)]">
-            Splitko · orchestrator
+            Splitko · chat
           </div>
           <div
             className="display"
             style={{ fontSize: "1.2rem", lineHeight: 1.0 }}
           >
-            Show your work
+            Ask me anything about Split
           </div>
-        </div>
-        <div className="mono-tag rounded-full bg-[var(--color-cream-shadow)] px-2 py-1">
-          {INTENTS.length} intents · {INTENTS.filter((i) => i.toolCalls.some((t) => t.real)).length} live ports
         </div>
       </header>
 
@@ -110,7 +110,7 @@ export default function ChatView() {
         className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-6 no-scrollbar"
       >
         {turns.length === 0 ? (
-          <EmptyState onPick={send} />
+          <EmptyState onPick={send} heroPhoto={heroPhoto} />
         ) : (
           turns.map((t, i) => <Turn key={i} turn={t} />)
         )}
@@ -134,7 +134,11 @@ export default function ChatView() {
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="rounded-full bg-[var(--color-navy)] px-4 py-1.5 text-xs font-semibold text-[var(--color-cream)] disabled:opacity-40"
+            className="rounded-full px-4 py-1.5 text-xs font-semibold disabled:opacity-40"
+            style={{
+              background: "var(--color-navy)",
+              color: "var(--color-cream)",
+            }}
           >
             {busy ? "…" : "Send"}
           </button>
@@ -144,32 +148,62 @@ export default function ChatView() {
   );
 }
 
-function EmptyState({ onPick }: { onPick: (q: string) => void }) {
+function EmptyState({
+  onPick,
+  heroPhoto,
+}: {
+  onPick: (q: string) => void;
+  heroPhoto: HeroPhoto;
+}) {
+  // Just the first 6 intents — enough variety, low cognitive load.
+  const suggestions = INTENTS.slice(0, 6);
   return (
-    <div className="mx-auto max-w-screen-md space-y-6 text-[var(--color-ink-soft)]">
-      <div>
-        <h2
-          className="display"
-          style={{
-            fontSize: "clamp(1.7rem, 0.7rem + 2vw, 2.4rem)",
-            color: "var(--color-ink)",
-            letterSpacing: "-0.018em",
-          }}
+    <div className="mx-auto w-full max-w-screen-md space-y-6 text-[var(--color-ink-soft)]">
+      {heroPhoto && (
+        <div
+          className="relative w-full overflow-hidden rounded-2xl"
+          style={{ aspectRatio: "21 / 9", background: "var(--color-cream-deep)" }}
         >
-          What can I ask?
-        </h2>
-        <p className="body-lg">
-          This is the same brain that answers on the dashboard, but you see
-          every tool call as it happens. DHMZ and IZOR fire for real.
-        </p>
-      </div>
+          <Image
+            src={heroPhoto.src}
+            alt={heroPhoto.alt}
+            fill
+            sizes="(min-width: 1024px) 720px, 92vw"
+            className="object-cover"
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 p-5 text-[var(--color-cream)]"
+            style={{
+              background:
+                "linear-gradient(0deg, color-mix(in oklch, var(--color-ink) 78%, transparent), transparent 70%)",
+            }}
+          >
+            <div
+              className="display"
+              style={{
+                fontSize: "clamp(1.5rem, 0.7rem + 1.4vw, 2rem)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              How can I help you today?
+            </div>
+            <p className="text-sm opacity-90">
+              Type below, or tap one of the questions to try it.
+            </p>
+          </div>
+        </div>
+      )}
       <ul className="grid gap-2 sm:grid-cols-2">
-        {INTENTS.slice(0, 8).map((i) => (
+        {suggestions.map((i) => (
           <li key={i.id}>
             <button
               type="button"
               onClick={() => onPick(i.example)}
-              className="w-full rounded-xl border border-[var(--color-ink)]/12 bg-[var(--color-cream-shadow)]/70 p-4 text-left transition-colors hover:bg-[var(--color-cream-shadow)]"
+              className="w-full rounded-xl bg-[var(--color-cream-shadow)] p-4 text-left transition-colors hover:bg-[var(--color-cream-deep)]"
+              style={{
+                border:
+                  "1px solid color-mix(in oklch, var(--color-ink) 12%, transparent)",
+              }}
             >
               <div
                 style={{
@@ -177,12 +211,10 @@ function EmptyState({ onPick }: { onPick: (q: string) => void }) {
                   fontWeight: 600,
                   color: "var(--color-ink)",
                   letterSpacing: "-0.005em",
+                  fontSize: "0.98rem",
                 }}
               >
                 {i.example}
-              </div>
-              <div className="mono-tag mt-1 text-[var(--color-ink-soft)] opacity-70">
-                will use · {i.toolCalls.map((t) => t.name).join(" · ")}
               </div>
             </button>
           </li>
@@ -196,7 +228,13 @@ function Turn({ turn }: { turn: Turn }) {
   if (turn.role === "user") {
     return (
       <div className="mx-auto max-w-screen-md self-end">
-        <div className="ml-auto inline-block max-w-[80%] rounded-2xl rounded-br-md bg-[var(--color-navy)] px-4 py-2.5 text-sm text-[var(--color-cream)]">
+        <div
+          className="ml-auto inline-block max-w-[80%] rounded-2xl rounded-br-md px-4 py-2.5 text-sm"
+          style={{
+            background: "var(--color-navy)",
+            color: "var(--color-cream)",
+          }}
+        >
           {turn.text}
         </div>
       </div>
@@ -204,18 +242,24 @@ function Turn({ turn }: { turn: Turn }) {
   }
   return (
     <div className="mx-auto w-full max-w-screen-md">
-      <ToolStream toolCalls={turn.toolCalls} realResults={turn.realResults} />
+      <ToolStream toolCalls={turn.toolCalls} />
       {turn.text && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: ease.outQuart }}
-          className="mt-4 rounded-2xl border border-[var(--color-ink)]/12 bg-[var(--color-cream-shadow)]/70 p-5 leading-relaxed"
+          className="mt-4 rounded-2xl bg-[var(--color-cream-shadow)] p-5 leading-relaxed"
+          style={{
+            border:
+              "1px solid color-mix(in oklch, var(--color-ink) 10%, transparent)",
+          }}
         >
           {turn.text}
-          <div className="mono-tag mt-3 text-[var(--color-ink-soft)] opacity-65">
-            sources · {turn.citations.join(" · ")}
-          </div>
+          {turn.citations.length > 0 && (
+            <div className="mono-tag mt-3 text-[var(--color-ink-soft)] opacity-65">
+              sources · {turn.citations.join(" · ")}
+            </div>
+          )}
         </motion.div>
       )}
     </div>
@@ -224,28 +268,33 @@ function Turn({ turn }: { turn: Turn }) {
 
 function ToolStream({
   toolCalls,
-  realResults,
 }: {
   toolCalls: (ToolCall & { done: boolean; startedAt: number })[];
-  realResults: Record<string, unknown>;
 }) {
   return (
-    <ol className="overflow-hidden rounded-2xl border border-[var(--color-ink)]/12 bg-[var(--color-cream-shadow)]/40">
+    <ol
+      className="overflow-hidden rounded-2xl"
+      style={{
+        background: "color-mix(in oklch, var(--color-cream-shadow) 60%, transparent)",
+        border:
+          "1px solid color-mix(in oklch, var(--color-ink) 10%, transparent)",
+      }}
+    >
       {toolCalls.map((tc, i) => (
         <li
           key={i}
-          className="grid grid-cols-[26px_1fr_auto] items-start gap-3 px-4 py-2.5"
+          className="grid grid-cols-[28px_1fr_auto] items-center gap-3 px-4 py-2.5"
           style={{
             borderBottom:
               i < toolCalls.length - 1
                 ? "1px solid color-mix(in oklch, var(--color-ink) 8%, transparent)"
                 : undefined,
             background: tc.done
-              ? "color-mix(in oklch, var(--color-green-good) 5%, transparent)"
+              ? "color-mix(in oklch, var(--color-green-good) 6%, transparent)"
               : "color-mix(in oklch, var(--color-amber-warn) 10%, transparent)",
           }}
         >
-          <span aria-hidden style={{ marginTop: 2 }}>
+          <span aria-hidden>
             {tc.done ? (
               <CheckIcon />
             ) : (
@@ -256,38 +305,30 @@ function ToolStream({
                   repeat: Infinity,
                   ease: "linear",
                 }}
-                style={{ display: "inline-block", color: "var(--color-amber-warn)" }}
+                style={{
+                  display: "inline-block",
+                  color: "var(--color-amber-warn)",
+                }}
               >
                 ⟳
               </motion.span>
             )}
           </span>
-          <div className="font-mono text-[12.5px]">
-            <span style={{ color: "var(--color-navy)" }}>{tc.name}</span>
+          <div className="text-[13.5px]">
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                color: "var(--color-ink)",
+              }}
+            >
+              {humanise(tc.name)}
+            </span>
             {tc.args && (
-              <span className="text-[var(--color-ink-soft)]">({tc.args})</span>
+              <span className="ml-1 text-[var(--color-ink-soft)]">
+                — {tc.args}
+              </span>
             )}
-            {tc.real && (
-              <AnimatePresence>
-                {tc.done && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="ml-2 inline-block rounded px-1.5 py-0.5 text-[9px] font-bold"
-                    style={{
-                      background: "var(--color-red)",
-                      color: "var(--color-cream)",
-                    }}
-                  >
-                    REAL · {tc.real.toUpperCase()}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            )}
-            {tc.real && tc.done && realResults[tc.name] ? (
-              <RealPayload payload={realResults[tc.name]} />
-            ) : null}
           </div>
           <span className="mono-tag opacity-65">
             {tc.done ? `${(tc.durationMs / 1000).toFixed(1)}s` : ""}
@@ -298,44 +339,72 @@ function ToolStream({
   );
 }
 
-function RealPayload({ payload }: { payload: unknown }) {
-  let preview = "";
-  try {
-    preview = JSON.stringify(payload, null, 2);
-  } catch {
-    preview = String(payload);
-  }
-  const truncated = preview.slice(0, 220);
-  return (
-    <div
-      className="mt-1.5 max-h-24 overflow-hidden rounded-md bg-[var(--color-ink)]/85 p-2 font-mono text-[10.5px] text-[var(--color-cream)]"
-      style={{ whiteSpace: "pre-wrap" }}
-    >
-      {truncated}
-      {preview.length > 220 ? "…" : ""}
-    </div>
-  );
-}
-
 function CheckIcon() {
   return (
     <span
       aria-hidden
       style={{
         display: "inline-flex",
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         borderRadius: 999,
         background: "var(--color-green-good)",
         color: "var(--color-cream)",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 12,
+        fontSize: 13,
       }}
     >
       ✓
     </span>
   );
+}
+
+function humanise(name: string) {
+  switch (name) {
+    case "getSeaQuality":
+      return "Reading sea quality";
+    case "getCurrentWeather":
+      return "Checking the weather";
+    case "getWebcamFrame":
+      return "Looking at the webcam";
+    case "getBusETA":
+      return "Asking the bus";
+    case "getTrafficState":
+      return "Checking traffic";
+    case "getParkingSignal":
+      return "Counting parking bays";
+    case "getDynamicPrice":
+      return "Reading parking prices";
+    case "ragLookup":
+      return "Reading gov.hr";
+    case "matchProfile":
+      return "Checking your profile";
+    case "classifyIssue":
+      return "Classifying the photo";
+    case "geocodeFromExif":
+      return "Reading photo location";
+    case "routeToDepartment":
+      return "Routing to the office";
+    case "listMarketSide":
+      return "Listing market side";
+    case "matchCounterparty":
+      return "Finding a counterpart";
+    case "negotiateBand":
+      return "Negotiating the band";
+    case "listEvents":
+      return "Listing what's on";
+    case "getWeather":
+      return "Checking tonight's weather";
+    case "transcribeAudio":
+      return "Listening to the recording";
+    case "prepareHandoff":
+      return "Briefing the human";
+    case "getFerry":
+      return "Asking Jadrolinija";
+    default:
+      return name;
+  }
 }
 
 // keep Intent referenced so TS doesn't drop the type import on unused-symbol scans
