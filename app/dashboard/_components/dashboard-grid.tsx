@@ -6,7 +6,7 @@ import type { IntentId } from "@/lib/intents";
 import { ease } from "@/lib/motion";
 import { useIntent } from "./intent-context";
 import TileBeaches, { type BeachData } from "./tile-beaches";
-import TileWeather, { type WeatherData } from "./tile-weather";
+import TileTonight from "./tile-tonight";
 import TileCivicQueue from "./tile-civic-queue";
 import TileCivicReport from "./tile-civic-report";
 import TileMarketplace from "./tile-marketplace";
@@ -18,26 +18,22 @@ import type { TilePhoto } from "./tile-shell";
 
 type Props = {
   beaches: BeachData[];
-  weather: WeatherData | null;
-  weatherPhoto: TilePhoto | null;
+  tonightPhoto: TilePhoto | null;
   civicPhoto: TilePhoto | null;
   marketplacePhoto: TilePhoto | null;
 };
 
 type TileSpec = {
   id: string;
-  // priority by intent — lower is earlier; -1 hides it
   priorityByIntent: Partial<Record<IntentId, number>>;
   defaultPriority: number;
   render: () => React.ReactNode;
-  // 12-column grid; cols clamp to available width.
   span: { cols: number; rows: number };
 };
 
 export default function DashboardGrid({
   beaches,
-  weather,
-  weatherPhoto,
+  tonightPhoto,
   civicPhoto,
   marketplacePhoto,
 }: Props) {
@@ -54,31 +50,30 @@ export default function DashboardGrid({
           parking: 4,
           ferry: 2,
         },
-        // Hero tile: takes 8/12 cols and stretches tall.
+        // Hero — 8 wide × 2 tall.
         span: { cols: 8, rows: 2 },
         render: () => (
           <TileBeaches beaches={beaches} expanded={intent === "beach"} />
         ),
       },
       {
-        id: "weather",
+        id: "tonight",
         defaultPriority: 2,
         priorityByIntent: {
-          beach: 1,
-          cultural: 1,
-          ferry: 3,
+          cultural: 0,
         },
+        // Sidekick to beaches: 4 wide × 2 tall, photo-led.
         span: { cols: 4, rows: 2 },
-        render: () => <TileWeather weather={weather} photo={weatherPhoto} />,
+        render: () => <TileTonight photo={tonightPhoto} />,
       },
       {
         id: "civic-report",
         defaultPriority: 3,
         priorityByIntent: {
           "civic-report": 0,
-          bureaucracy: 2,
         },
-        span: { cols: 8, rows: 1 },
+        // Big CTA — 6 cols × 1 row.
+        span: { cols: 6, rows: 1 },
         render: () => <TileCivicReport photo={civicPhoto} />,
       },
       {
@@ -87,7 +82,7 @@ export default function DashboardGrid({
         priorityByIntent: {
           marketplace: 0,
         },
-        span: { cols: 4, rows: 1 },
+        span: { cols: 6, rows: 1 },
         render: () => (
           <TileMarketplace
             expanded={intent === "marketplace"}
@@ -95,12 +90,13 @@ export default function DashboardGrid({
           />
         ),
       },
-      // Intent-driven tiles below — appear only when their intent is active.
+      // Intent-driven tiles below.
       {
         id: "civic-queue",
         defaultPriority: 99,
         priorityByIntent: {
           "civic-report": 1,
+          bureaucracy: 3,
         },
         span: { cols: 6, rows: 1 },
         render: () => <TileCivicQueue expanded={intent === "civic-report"} />,
@@ -144,7 +140,7 @@ export default function DashboardGrid({
         render: () => <TileFerry />,
       },
     ],
-    [beaches, weather, intent, weatherPhoto, civicPhoto, marketplacePhoto],
+    [beaches, intent, tonightPhoto, civicPhoto, marketplacePhoto],
   );
 
   const visible = useMemo(() => {
@@ -163,7 +159,7 @@ export default function DashboardGrid({
   return (
     <motion.div
       layout
-      className="grid grid-cols-1 gap-4 md:grid-cols-12 lg:auto-rows-[minmax(200px,auto)]"
+      className="grid grid-cols-1 gap-4 md:grid-cols-12 lg:auto-rows-[minmax(220px,auto)]"
       transition={{ duration: 0.45, ease: ease.outQuart }}
     >
       <AnimatePresence mode="popLayout">
@@ -179,7 +175,7 @@ export default function DashboardGrid({
               gridColumn: `span ${Math.min(t.span.cols, 12)} / span ${Math.min(t.span.cols, 12)}`,
               gridRow: `span ${t.span.rows} / span ${t.span.rows}`,
             }}
-            className="min-h-[200px]"
+            className="min-h-[220px]"
           >
             {t.render()}
           </motion.div>

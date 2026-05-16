@@ -1,12 +1,10 @@
 import { findUniquePhotos } from "@/lib/pexels";
 import { getOrderedSplitBeaches, ratingMeta } from "@/lib/izor";
-import { getSplitObservation, getCurrentObservations } from "@/lib/dhmz";
 import DashboardGrid from "./_components/dashboard-grid";
 import DashboardShell from "./_components/dashboard-shell";
 import ChatPanel from "./_components/chat-panel";
 import MobileChatDrawer from "./_components/mobile-chat-drawer";
 import type { BeachData } from "./_components/tile-beaches";
-import type { WeatherData } from "./_components/tile-weather";
 import type { TilePhoto } from "./_components/tile-shell";
 
 export const revalidate = 300;
@@ -32,11 +30,7 @@ const BEACH_QUERIES: Record<string, string[]> = {
 };
 
 export default async function DashboardPage() {
-  const [beachesRaw, splitObs, allObs] = await Promise.all([
-    getOrderedSplitBeaches().catch(() => []),
-    getSplitObservation().catch(() => null),
-    getCurrentObservations().catch(() => ({ observedAt: "—", stations: [] })),
-  ]);
+  const beachesRaw = await getOrderedSplitBeaches().catch(() => []);
 
   // Dedupe Bačvice sub-locations to one card by picking the worst rating.
   const dedup = new Map<string, (typeof beachesRaw)[number]>();
@@ -47,17 +41,13 @@ export default async function DashboardPage() {
   }
   const candidate = [...dedup.values()].slice(0, 6);
 
-  // Build a single photo-allocation request: every beach + every non-beach
-  // tile that wants imagery. findUniquePhotos guarantees no two slots get the
-  // same Pexels photo.
   const photoItems = [
     ...candidate.map((b) => {
       const name = simpleName(b.lpla);
       return {
         key: `beach:${name}`,
         queries:
-          BEACH_QUERIES[name] ??
-          [
+          BEACH_QUERIES[name] ?? [
             `${name} beach split croatia`,
             `${name} split adriatic`,
             "split croatia beach",
@@ -65,11 +55,11 @@ export default async function DashboardPage() {
       };
     }),
     {
-      key: "weather",
+      key: "tonight",
       queries: [
-        "split croatia waterfront sunset",
-        "split croatia sky",
-        "dalmatian sky",
+        "split croatia old town night",
+        "split croatia night palace",
+        "diocletian palace night",
       ],
     },
     {
@@ -110,21 +100,9 @@ export default async function DashboardPage() {
     };
   });
 
-  const weatherPhoto = pickPhoto(photoMap, "weather");
+  const tonightPhoto = pickPhoto(photoMap, "tonight");
   const civicPhoto = pickPhoto(photoMap, "civic");
   const marketplacePhoto = pickPhoto(photoMap, "marketplace");
-
-  const weather: WeatherData | null = splitObs
-    ? {
-        station: splitObs.name,
-        observedAt: allObs.observedAt,
-        tempC: splitObs.tempC,
-        humidity: splitObs.humidity,
-        windDir: splitObs.windDir,
-        windSpeed: splitObs.windSpeed,
-        description: splitObs.description,
-      }
-    : null;
 
   return (
     <>
@@ -151,8 +129,7 @@ export default async function DashboardPage() {
             </div>
             <DashboardGrid
               beaches={beaches}
-              weather={weather}
-              weatherPhoto={weatherPhoto}
+              tonightPhoto={tonightPhoto}
               civicPhoto={civicPhoto}
               marketplacePhoto={marketplacePhoto}
             />
@@ -178,12 +155,9 @@ function Legend() {
   const labels = [1, 2, 3, 4].map((n) => ({ n, ...ratingMeta(n) }));
   return (
     <div className="flex flex-wrap items-center gap-2 text-[var(--color-ink-soft)]">
-      <span className="mono-tag opacity-70">IZOR rating</span>
+      <span className="mono-tag opacity-70">Sea-quality rating</span>
       {labels.map((l) => (
-        <span
-          key={l.n}
-          className="mono-tag flex items-center gap-1.5"
-        >
+        <span key={l.n} className="mono-tag flex items-center gap-1.5">
           <span
             aria-hidden
             style={{
@@ -202,7 +176,6 @@ function Legend() {
 }
 
 function simpleName(raw: string) {
-  // collapse "Bačvice - ulaz" / "Trstenik-Radoševac" / "Uvala Kašjuni" into a tile-friendly label
   if (/ba[čc]vice/i.test(raw)) return "Bačvice";
   if (/trstenik/i.test(raw)) return "Trstenik";
   if (/ka[šs]juni/i.test(raw)) return "Kašjuni";
