@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { Wordmark } from "@/components/ui/wordmark";
 import { clearDemoSession, readDemoSession } from "@/lib/profile";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
-import { useChatVisibility } from "./intent-context";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard" },
@@ -17,8 +16,6 @@ export default function DashboardNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [name, setName] = useState<string>("");
-  const { chatOpen, setChatOpen } = useChatVisibility();
-  const onDashboardRoute = pathname === "/dashboard";
 
   useEffect(() => {
     if (supabaseConfigured()) {
@@ -84,27 +81,6 @@ export default function DashboardNav() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {onDashboardRoute && (
-            <button
-              type="button"
-              onClick={() => setChatOpen(!chatOpen)}
-              aria-pressed={chatOpen}
-              className="hidden items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold lg:inline-flex"
-              style={{
-                background: chatOpen
-                  ? "var(--color-navy)"
-                  : "var(--color-cream-shadow)",
-                color: chatOpen
-                  ? "var(--color-cream)"
-                  : "var(--color-ink)",
-                border:
-                  "1px solid color-mix(in oklch, var(--color-ink) 12%, transparent)",
-              }}
-            >
-              <span aria-hidden>{chatOpen ? "▸" : "◂"}</span>
-              {chatOpen ? "Hide chat" : "Show chat"}
-            </button>
-          )}
           <span
             className="hidden text-xs sm:block"
             style={{ color: "var(--color-ink-soft)" }}

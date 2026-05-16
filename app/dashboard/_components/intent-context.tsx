@@ -34,7 +34,7 @@ const STORAGE_KEY = "splitko.chatOpen";
 
 export function IntentProvider({ children }: { children: React.ReactNode }) {
   const [intent, setIntent] = useState<IntentId>("default");
-  const [chatOpen, setChatOpenState] = useState<boolean>(true);
+  const [chatOpen, setChatOpenState] = useState<boolean>(false);
 
   // Hydrate the chat preference from localStorage after mount to avoid SSR mismatch.
   useEffect(() => {

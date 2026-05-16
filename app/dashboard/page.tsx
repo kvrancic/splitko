@@ -4,7 +4,6 @@ import { getSplitObservation, getCurrentObservations } from "@/lib/dhmz";
 import DashboardGrid from "./_components/dashboard-grid";
 import DashboardShell from "./_components/dashboard-shell";
 import ChatPanel from "./_components/chat-panel";
-import { IntentProvider } from "./_components/intent-context";
 import MobileChatDrawer from "./_components/mobile-chat-drawer";
 import type { BeachData } from "./_components/tile-beaches";
 import type { WeatherData } from "./_components/tile-weather";
@@ -128,7 +127,7 @@ export default async function DashboardPage() {
     : null;
 
   return (
-    <IntentProvider>
+    <>
       <DashboardShell
         main={
           <>
@@ -162,7 +161,7 @@ export default async function DashboardPage() {
         chat={<ChatPanel />}
       />
       <MobileChatDrawer />
-    </IntentProvider>
+    </>
   );
 }
 
