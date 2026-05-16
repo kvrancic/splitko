@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Wordmark } from "@/components/ui/wordmark";
 import { clearDemoSession, readDemoSession } from "@/lib/profile";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
+import { useChatVisibility } from "./intent-context";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard" },
@@ -16,6 +17,8 @@ export default function DashboardNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [name, setName] = useState<string>("");
+  const { chatOpen, setChatOpen } = useChatVisibility();
+  const onDashboardRoute = pathname === "/dashboard";
 
   useEffect(() => {
     if (supabaseConfigured()) {
@@ -55,18 +58,24 @@ export default function DashboardNav() {
       <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Wordmark variant="ink" size={20} />
 
-        <nav className="flex items-center gap-1 rounded-full bg-[var(--color-cream-shadow)] p-1">
+        <nav
+          className="flex items-center gap-1 rounded-full p-1"
+          style={{ background: "var(--color-cream-shadow)" }}
+        >
           {TABS.map((t) => {
             const active = pathname === t.href;
             return (
               <Link
                 key={t.id}
                 href={t.href}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                  active
-                    ? "bg-[var(--color-navy)] text-[var(--color-cream)]"
-                    : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
-                }`}
+                aria-current={active ? "page" : undefined}
+                className="rounded-full px-4 py-1.5 text-sm font-semibold transition-colors"
+                style={{
+                  background: active ? "var(--color-navy)" : "transparent",
+                  color: active
+                    ? "var(--color-cream)"
+                    : "var(--color-ink-soft)",
+                }}
               >
                 {t.label}
               </Link>
@@ -74,7 +83,28 @@ export default function DashboardNav() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onDashboardRoute && (
+            <button
+              type="button"
+              onClick={() => setChatOpen(!chatOpen)}
+              aria-pressed={chatOpen}
+              className="hidden items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold lg:inline-flex"
+              style={{
+                background: chatOpen
+                  ? "var(--color-navy)"
+                  : "var(--color-cream-shadow)",
+                color: chatOpen
+                  ? "var(--color-cream)"
+                  : "var(--color-ink)",
+                border:
+                  "1px solid color-mix(in oklch, var(--color-ink) 12%, transparent)",
+              }}
+            >
+              <span aria-hidden>{chatOpen ? "▸" : "◂"}</span>
+              {chatOpen ? "Hide chat" : "Show chat"}
+            </button>
+          )}
           <span
             className="hidden text-xs sm:block"
             style={{ color: "var(--color-ink-soft)" }}
@@ -83,7 +113,13 @@ export default function DashboardNav() {
           </span>
           <button
             onClick={onSignOut}
-            className="rounded-full border border-[var(--color-ink)]/20 px-3 py-1.5 text-xs font-semibold hover:border-[var(--color-ink)]"
+            className="rounded-full px-3 py-1.5 text-xs font-semibold"
+            style={{
+              border:
+                "1px solid color-mix(in oklch, var(--color-ink) 20%, transparent)",
+              color: "var(--color-ink)",
+              background: "var(--color-cream)",
+            }}
           >
             Sign out
           </button>

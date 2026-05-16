@@ -2,6 +2,7 @@ import { findHeroPhoto, searchPexels } from "@/lib/pexels";
 import { getOrderedSplitBeaches, ratingMeta } from "@/lib/izor";
 import { getSplitObservation, getCurrentObservations } from "@/lib/dhmz";
 import DashboardGrid from "./_components/dashboard-grid";
+import DashboardShell from "./_components/dashboard-shell";
 import ChatPanel from "./_components/chat-panel";
 import { IntentProvider } from "./_components/intent-context";
 import MobileChatDrawer from "./_components/mobile-chat-drawer";
@@ -65,38 +66,32 @@ export default async function DashboardPage() {
 
   return (
     <IntentProvider>
-      <div className="mx-auto grid max-w-screen-2xl gap-4 px-4 py-4 lg:grid-cols-[1fr_360px] lg:px-6 lg:py-6">
-        <main>
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <div className="mono-tag text-[var(--color-ink-soft)]">
-                Live state of Split
+      <DashboardShell
+        main={
+          <>
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <div className="mono-tag text-[var(--color-ink-soft)]">
+                  Live state of Split
+                </div>
+                <h1
+                  className="display"
+                  style={{
+                    fontSize: "clamp(1.7rem, 0.7rem + 2.2vw, 2.4rem)",
+                    lineHeight: 1.0,
+                    letterSpacing: "-0.018em",
+                  }}
+                >
+                  Your city, right now.
+                </h1>
               </div>
-              <h1
-                className="display"
-                style={{
-                  fontSize: "clamp(1.7rem, 0.7rem + 2.2vw, 2.4rem)",
-                  lineHeight: 1.0,
-                  letterSpacing: "-0.018em",
-                }}
-              >
-                Your city, right now.
-              </h1>
+              <Legend />
             </div>
-            <Legend />
-          </div>
-          <DashboardGrid beaches={beaches} weather={weather} />
-        </main>
-        <div
-          className="hidden h-[calc(100dvh-90px)] overflow-hidden rounded-2xl lg:block"
-          style={{
-            border:
-              "1px solid color-mix(in oklch, var(--color-ink) 10%, transparent)",
-          }}
-        >
-          <ChatPanel />
-        </div>
-      </div>
+            <DashboardGrid beaches={beaches} weather={weather} />
+          </>
+        }
+        chat={<ChatPanel />}
+      />
       <MobileChatDrawer />
     </IntentProvider>
   );
