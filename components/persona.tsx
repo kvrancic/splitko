@@ -1,9 +1,4 @@
-import {
-  dicebearUrl,
-  fetchDicebearSvg,
-  type Character,
-  type DicebearOptions,
-} from "@/lib/dicebear";
+import { dicebearUrl, type Character, type DicebearOptions } from "@/lib/dicebear";
 
 type PersonaProps = {
   character: Character;
@@ -15,11 +10,11 @@ type PersonaProps = {
 };
 
 /**
- * Renders a consistent character across scenes by inlining a DiceBear v9 SVG
- * server-side. Use `options` to override clothing color, expression, etc.,
- * while the seed stays locked per character.
+ * Renders a consistent character across scenes via DiceBear v9 SVG over HTTPS.
+ * Safe in both server and client components — it's just an <img>.
+ * Seed is locked per character so the same person appears in every scene.
  */
-export default async function Persona({
+export default function Persona({
   character,
   size = 160,
   className,
@@ -28,44 +23,22 @@ export default async function Persona({
   scene,
 }: PersonaProps) {
   const url = dicebearUrl(character, options);
-  const svg = await fetchDicebearSvg(url);
   return (
     <div
       className={className}
       style={{ width: size, height: size }}
-      aria-label={label ?? `${character} illustration${scene ? `, ${scene}` : ""}`}
       role="img"
+      aria-label={label ?? `${character} illustration${scene ? `, ${scene}` : ""}`}
     >
-      {svg ? (
-        <div
-          style={{ width: "100%", height: "100%" }}
-          // SVG comes from a trusted, well-known API — DiceBear v9 over HTTPS.
-          dangerouslySetInnerHTML={{ __html: svg }}
-        />
-      ) : (
-        <PersonaFallback character={character} />
-      )}
-    </div>
-  );
-}
-
-function PersonaFallback({ character }: { character: Character }) {
-  const initial = character[0]?.toUpperCase() ?? "•";
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        background: "var(--color-navy-soft)",
-        color: "var(--color-cream)",
-        display: "grid",
-        placeItems: "center",
-        borderRadius: 12,
-        fontFamily: "var(--font-display)",
-        fontSize: "2.4rem",
-      }}
-    >
-      {initial}
+      <img
+        src={url}
+        alt=""
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        style={{ width: "100%", height: "100%", display: "block" }}
+      />
     </div>
   );
 }

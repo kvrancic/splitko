@@ -99,7 +99,7 @@ function Header() {
   );
 }
 
-async function Scene({
+function Scene({
   scene,
   index,
   flip,
