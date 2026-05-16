@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 
 type Tone = "cream" | "navy" | "teal" | "red" | "amber" | "green";
 
+export type TilePhoto = { src: string; alt: string };
+
 const BG: Record<Tone, string> = {
   cream: "var(--color-cream-shadow)",
   navy: "var(--color-navy)",

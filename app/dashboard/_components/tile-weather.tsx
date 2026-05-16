@@ -1,6 +1,7 @@
 "use client";
 
-import TileShell from "./tile-shell";
+import Image from "next/image";
+import TileShell, { type TilePhoto } from "./tile-shell";
 
 export type WeatherData = {
   station: string;
@@ -12,63 +13,81 @@ export type WeatherData = {
   description: string;
 };
 
-export default function TileWeather({ weather }: { weather: WeatherData | null }) {
+export default function TileWeather({
+  weather,
+  photo,
+}: {
+  weather: WeatherData | null;
+  photo?: TilePhoto | null;
+}) {
   if (!weather) {
     return (
-      <TileShell tone="navy" kicker="Weather · DHMZ" title="Split">
-        <p className="text-[var(--color-cream)]/70">
-          DHMZ feed unavailable. Last known good cached locally.
+      <TileShell tone="cream" kicker="Weather · DHMZ" title="Split">
+        <p className="text-[var(--color-ink-soft)]">
+          Weather is offline for a moment. Last known reading is being shown
+          where relevant.
         </p>
       </TileShell>
     );
   }
   return (
-    <TileShell
-      tone="navy"
-      kicker={`DHMZ · ${weather.station}`}
-      title=""
-      hot
-    >
-      <div className="flex h-full flex-col justify-between gap-5">
-        <div>
+    <TileShell tone="cream" kicker="Weather · Split" title="" hot>
+      <div className="flex h-full flex-col gap-3">
+        {photo && (
+          <div
+            className="relative w-full overflow-hidden rounded-xl"
+            style={{ aspectRatio: "16 / 9", background: "var(--color-cream-deep)" }}
+          >
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              fill
+              sizes="(min-width: 1024px) 22vw, 90vw"
+              className="object-cover"
+            />
+          </div>
+        )}
+        <div className="flex items-end gap-3">
           <div
             className="display"
             style={{
-              fontSize: "clamp(2.6rem, 1.3rem + 3vw, 4rem)",
+              fontSize: "clamp(2.4rem, 1.2rem + 2vw, 3.2rem)",
               lineHeight: 0.95,
               letterSpacing: "-0.025em",
             }}
           >
-            {weather.tempC?.toFixed(1) ?? "—"}
+            {weather.tempC?.toFixed(0) ?? "—"}
             <span
               style={{
                 fontSize: "0.45em",
-                marginLeft: "0.15em",
-                color: "var(--color-cream)",
-                opacity: 0.5,
+                marginLeft: "0.08em",
+                color: "var(--color-ink-soft)",
               }}
             >
               °C
             </span>
           </div>
           <div
-            className="mt-2 text-[var(--color-cream)]/80"
+            className="pb-2 text-[var(--color-ink-soft)]"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "1.05rem",
+              fontSize: "0.95rem",
               letterSpacing: "-0.005em",
             }}
           >
             {weather.description || "—"}
           </div>
         </div>
-        <dl className="grid grid-cols-3 gap-2 text-[var(--color-cream)]/75">
+        <dl className="grid grid-cols-3 gap-2 text-[var(--color-ink-soft)]">
           <Stat label="Humidity" value={`${weather.humidity ?? "—"}%`} />
-          <Stat label="Wind" value={`${weather.windSpeed ?? "—"} m/s`} />
+          <Stat
+            label="Wind"
+            value={`${weather.windSpeed ?? "—"} m/s`}
+          />
           <Stat label="Dir" value={weather.windDir ?? "—"} />
         </dl>
         <div className="mono-tag opacity-55">
-          observed · {weather.observedAt}
+          DHMZ · {weather.station} · {weather.observedAt}
         </div>
       </div>
     </TileShell>
@@ -82,8 +101,9 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dd
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: "1.05rem",
+          fontSize: "1rem",
           letterSpacing: "-0.01em",
+          color: "var(--color-ink)",
         }}
       >
         {value}

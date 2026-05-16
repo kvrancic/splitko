@@ -20,22 +20,23 @@ export default function TileBeaches({
   beaches: BeachData[];
   expanded?: boolean;
 }) {
-  const list = expanded ? beaches.slice(0, 8) : beaches.slice(0, 4);
+  // 4 cards by default; full set when intent zooms in.
+  const list = expanded ? beaches.slice(0, 6) : beaches.slice(0, 4);
   return (
     <TileShell
       tone="teal"
-      kicker="Beaches · IZOR · live"
-      title="Sea quality, water temperature, crowd"
+      kicker="Beaches near you · live"
+      title="Where the sea is good right now"
       hot
     >
-      <div className="-mx-2 mt-1 flex gap-2 overflow-x-auto px-2 pb-1 no-scrollbar">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {list.map((b) => (
           <BeachCard key={b.name} beach={b} />
         ))}
       </div>
-      <p className="mono-tag mt-2 text-[var(--color-ink-soft)] opacity-65">
-        rating dot · IZOR {beaches[0]?.year ?? "—"} sample · sea temp + crowd
-        mocked
+      <p className="mono-tag mt-4 text-[var(--color-ink-soft)] opacity-65">
+        Sea-quality rating from IZOR {beaches[0]?.year ?? "—"} · tap a card to
+        plan a trip.
       </p>
     </TileShell>
   );
@@ -43,51 +44,69 @@ export default function TileBeaches({
 
 function BeachCard({ beach }: { beach: BeachData }) {
   const rating = ratingMeta(beach.rating);
-  // small synthetic, plausible-feeling mock fields:
   const seaTemp = pseudoSeaTemp(beach.name);
   const crowd = pseudoCrowd(beach.name);
 
   return (
     <article
-      className="flex w-44 shrink-0 flex-col overflow-hidden rounded-xl bg-[var(--color-cream)] text-[var(--color-ink)]"
+      className="flex flex-col overflow-hidden rounded-2xl bg-[var(--color-cream)] text-[var(--color-ink)] transition-transform hover:-translate-y-0.5"
       style={{
         border:
           "1px solid color-mix(in oklch, var(--color-ink) 8%, transparent)",
+        boxShadow:
+          "0 16px 32px -28px color-mix(in oklch, var(--color-ink) 60%, transparent)",
       }}
     >
-      <div className="relative h-24 w-full bg-[var(--color-cream-deep)]">
+      <div
+        className="relative w-full"
+        style={{ aspectRatio: "4 / 3", background: "var(--color-cream-deep)" }}
+      >
         {beach.image && (
           <Image
             src={beach.image.src}
             alt={beach.image.alt}
             fill
-            sizes="180px"
+            sizes="(min-width: 1280px) 220px, (min-width: 640px) 45vw, 90vw"
             className="object-cover"
           />
         )}
         <span
-          className="absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]"
+          className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em]"
           style={{
             background: rating.colorVar,
             color: "var(--color-cream)",
+            boxShadow:
+              "0 8px 16px -10px color-mix(in oklch, var(--color-ink) 60%, transparent)",
           }}
         >
           {rating.label}
         </span>
       </div>
-      <div className="flex flex-col gap-1.5 p-2.5">
+      <div className="flex flex-col gap-2 p-4">
         <div
           style={{
             fontFamily: "var(--font-display)",
-            fontWeight: 600,
-            fontSize: "0.95rem",
+            fontWeight: 700,
+            fontSize: "1.25rem",
+            letterSpacing: "-0.012em",
           }}
         >
           {beach.name}
         </div>
-        <div className="flex justify-between text-xs text-[var(--color-ink-soft)]">
-          <span>{seaTemp}°C</span>
-          <span>{crowd}</span>
+        <div className="flex items-center justify-between text-[14px] text-[var(--color-ink-soft)]">
+          <span>
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 700,
+                color: "var(--color-ink)",
+              }}
+            >
+              {seaTemp}°
+            </span>{" "}
+            sea
+          </span>
+          <span className="capitalize">{crowd}</span>
         </div>
       </div>
     </article>

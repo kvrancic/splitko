@@ -8,17 +8,20 @@ import { useIntent } from "./intent-context";
 import TileBeaches, { type BeachData } from "./tile-beaches";
 import TileWeather, { type WeatherData } from "./tile-weather";
 import TileCivicQueue from "./tile-civic-queue";
-import TileTonight from "./tile-tonight";
-import TileBureaucracy from "./tile-bureaucracy";
+import TileCivicReport from "./tile-civic-report";
 import TileMarketplace from "./tile-marketplace";
 import TileTransit from "./tile-transit";
 import TileBureauChecklist from "./tile-bureaucracy-checklist";
 import TileVoiceHandoff from "./tile-voice-handoff";
 import TileFerry from "./tile-ferry";
+import type { TilePhoto } from "./tile-shell";
 
 type Props = {
   beaches: BeachData[];
   weather: WeatherData | null;
+  weatherPhoto: TilePhoto | null;
+  civicPhoto: TilePhoto | null;
+  marketplacePhoto: TilePhoto | null;
 };
 
 type TileSpec = {
@@ -27,10 +30,17 @@ type TileSpec = {
   priorityByIntent: Partial<Record<IntentId, number>>;
   defaultPriority: number;
   render: () => React.ReactNode;
+  // 12-column grid; cols clamp to available width.
   span: { cols: number; rows: number };
 };
 
-export default function DashboardGrid({ beaches, weather }: Props) {
+export default function DashboardGrid({
+  beaches,
+  weather,
+  weatherPhoto,
+  civicPhoto,
+  marketplacePhoto,
+}: Props) {
   const { intent } = useIntent();
 
   const tiles: TileSpec[] = useMemo(
@@ -44,8 +54,11 @@ export default function DashboardGrid({ beaches, weather }: Props) {
           parking: 4,
           ferry: 2,
         },
-        span: { cols: 2, rows: 2 },
-        render: () => <TileBeaches beaches={beaches} expanded={intent === "beach"} />,
+        // Hero tile: takes 8/12 cols and stretches tall.
+        span: { cols: 8, rows: 2 },
+        render: () => (
+          <TileBeaches beaches={beaches} expanded={intent === "beach"} />
+        ),
       },
       {
         id: "weather",
@@ -55,47 +68,53 @@ export default function DashboardGrid({ beaches, weather }: Props) {
           cultural: 1,
           ferry: 3,
         },
-        span: { cols: 1, rows: 2 },
-        render: () => <TileWeather weather={weather} />,
+        span: { cols: 4, rows: 2 },
+        render: () => <TileWeather weather={weather} photo={weatherPhoto} />,
+      },
+      {
+        id: "civic-report",
+        defaultPriority: 3,
+        priorityByIntent: {
+          "civic-report": 0,
+          bureaucracy: 2,
+        },
+        span: { cols: 8, rows: 1 },
+        render: () => <TileCivicReport photo={civicPhoto} />,
+      },
+      {
+        id: "marketplace",
+        defaultPriority: 4,
+        priorityByIntent: {
+          marketplace: 0,
+        },
+        span: { cols: 4, rows: 1 },
+        render: () => (
+          <TileMarketplace
+            expanded={intent === "marketplace"}
+            photo={marketplacePhoto}
+          />
+        ),
+      },
+      // Intent-driven tiles below — appear only when their intent is active.
+      {
+        id: "civic-queue",
+        defaultPriority: 99,
+        priorityByIntent: {
+          "civic-report": 1,
+        },
+        span: { cols: 6, rows: 1 },
+        render: () => <TileCivicQueue expanded={intent === "civic-report"} />,
       },
       {
         id: "transit",
-        defaultPriority: 8,
+        defaultPriority: 99,
         priorityByIntent: {
           transit: 0,
           parking: 1,
           ferry: 1,
-          beach: 5,
         },
-        span: { cols: 2, rows: 1 },
+        span: { cols: 8, rows: 1 },
         render: () => <TileTransit highlight={intent} />,
-      },
-      {
-        id: "civic-queue",
-        defaultPriority: 3,
-        priorityByIntent: {
-          "civic-report": 0,
-        },
-        span: { cols: 1, rows: 1 },
-        render: () => <TileCivicQueue expanded={intent === "civic-report"} />,
-      },
-      {
-        id: "tonight",
-        defaultPriority: 5,
-        priorityByIntent: {
-          cultural: 0,
-        },
-        span: { cols: 1, rows: 1 },
-        render: () => <TileTonight expanded={intent === "cultural"} />,
-      },
-      {
-        id: "bureaucracy",
-        defaultPriority: 6,
-        priorityByIntent: {
-          bureaucracy: 0,
-        },
-        span: { cols: 2, rows: 1 },
-        render: () => <TileBureaucracy />,
       },
       {
         id: "bureaucracy-checklist",
@@ -103,17 +122,8 @@ export default function DashboardGrid({ beaches, weather }: Props) {
         priorityByIntent: {
           bureaucracy: 1,
         },
-        span: { cols: 2, rows: 1 },
+        span: { cols: 8, rows: 1 },
         render: () => <TileBureauChecklist />,
-      },
-      {
-        id: "marketplace",
-        defaultPriority: 7,
-        priorityByIntent: {
-          marketplace: 0,
-        },
-        span: { cols: 1, rows: 1 },
-        render: () => <TileMarketplace expanded={intent === "marketplace"} />,
       },
       {
         id: "voice",
@@ -121,7 +131,7 @@ export default function DashboardGrid({ beaches, weather }: Props) {
         priorityByIntent: {
           "voice-handoff": 0,
         },
-        span: { cols: 2, rows: 1 },
+        span: { cols: 8, rows: 1 },
         render: () => <TileVoiceHandoff />,
       },
       {
@@ -130,11 +140,11 @@ export default function DashboardGrid({ beaches, weather }: Props) {
         priorityByIntent: {
           ferry: 0,
         },
-        span: { cols: 2, rows: 1 },
+        span: { cols: 8, rows: 1 },
         render: () => <TileFerry />,
       },
     ],
-    [beaches, weather, intent],
+    [beaches, weather, intent, weatherPhoto, civicPhoto, marketplacePhoto],
   );
 
   const visible = useMemo(() => {
@@ -153,7 +163,7 @@ export default function DashboardGrid({ beaches, weather }: Props) {
   return (
     <motion.div
       layout
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:auto-rows-[minmax(160px,auto)]"
+      className="grid grid-cols-1 gap-4 md:grid-cols-12 lg:auto-rows-[minmax(200px,auto)]"
       transition={{ duration: 0.45, ease: ease.outQuart }}
     >
       <AnimatePresence mode="popLayout">
@@ -161,15 +171,15 @@ export default function DashboardGrid({ beaches, weather }: Props) {
           <motion.div
             layout
             key={t.id}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
+            exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.45, ease: ease.outQuart }}
             style={{
-              gridColumn: `span ${Math.min(t.span.cols, 4)} / span ${Math.min(t.span.cols, 4)}`,
+              gridColumn: `span ${Math.min(t.span.cols, 12)} / span ${Math.min(t.span.cols, 12)}`,
               gridRow: `span ${t.span.rows} / span ${t.span.rows}`,
             }}
-            className="min-h-[160px]"
+            className="min-h-[200px]"
           >
             {t.render()}
           </motion.div>

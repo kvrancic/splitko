@@ -78,3 +78,52 @@ export async function findHeroPhoto(
   }
   return null;
 }
+
+/**
+ * Pick a distinct photo for each item in `items` using its query list, ensuring
+ * no two items return the same photo. Falls back to a shared pool when a
+ * specific search has no hits. Order-stable per `items`.
+ */
+export async function findUniquePhotos<T extends { key: string; queries: string[] }>(
+  items: T[],
+  fallback: { query: string; minPool?: number } = { query: "split croatia" },
+  orientation: "landscape" | "portrait" | "square" = "landscape",
+): Promise<Record<string, PexelsPhoto | null>> {
+  const used = new Set<number>();
+  const result: Record<string, PexelsPhoto | null> = {};
+
+  // Run specific searches in parallel — Pexels memoises so repeated calls
+  // across items don't multiply traffic.
+  const perItemPhotos = await Promise.all(
+    items.map((it) => Promise.all(it.queries.map((q) => searchPexels(q, 6, orientation)))),
+  );
+
+  // Fallback pool, large enough to cover any items that miss everything specific.
+  const minPool = Math.max(items.length + 2, fallback.minPool ?? 8);
+  const pool = await searchPexels(fallback.query, minPool, orientation);
+  let poolIdx = 0;
+
+  items.forEach((it, i) => {
+    let chosen: PexelsPhoto | null = null;
+    for (const photos of perItemPhotos[i]!) {
+      const candidate = photos.find((p) => !used.has(p.id));
+      if (candidate) {
+        chosen = candidate;
+        break;
+      }
+    }
+    if (!chosen) {
+      while (poolIdx < pool.length) {
+        const p = pool[poolIdx++]!;
+        if (!used.has(p.id)) {
+          chosen = p;
+          break;
+        }
+      }
+    }
+    if (chosen) used.add(chosen.id);
+    result[it.key] = chosen;
+  });
+
+  return result;
+}
