@@ -10,23 +10,22 @@ import type { TilePhoto } from "./_components/tile-shell";
 export const revalidate = 300;
 
 const BEACH_QUERIES: Record<string, string[]> = {
-  Bačvice: [
-    "bacvice beach split croatia",
-    "bacvice split waterfront",
-    "split city beach",
-  ],
-  Žnjan: ["znjan beach split", "znjan croatia coastline", "split adriatic"],
-  Kašjuni: [
-    "kasjuni beach marjan split",
-    "marjan beach croatia",
-    "split pine forest coast",
-  ],
   Bene: ["bene marjan split", "marjan park split", "marjan forest sea split"],
   Trstenik: ["trstenik split croatia", "split beach pebble", "dalmatia beach"],
   Ježinac: ["jezinac beach split", "split rocky coast", "adriatic cove"],
   Zvončac: ["zvoncac split", "split coastline pier", "marjan coast"],
   Firule: ["firule split", "split family beach", "dalmatian shore"],
   Duilovo: ["duilovo split", "split eastern coast", "dalmatia bay"],
+};
+
+/**
+ * Hand-picked local photos for the well-known beaches — these override the
+ * Pexels search entirely so the image always matches the place.
+ */
+const BEACH_LOCAL_PHOTO: Record<string, { src: string; alt: string }> = {
+  Bačvice: { src: "/beaches/bacvice.jpg", alt: "Bačvice beach, Split" },
+  Žnjan: { src: "/beaches/znjan.jpeg", alt: "Žnjan beach, Split" },
+  Kašjuni: { src: "/beaches/kasjuni.jpeg", alt: "Kašjuni beach, Split" },
 };
 
 export default async function DashboardPage() {
@@ -42,18 +41,21 @@ export default async function DashboardPage() {
   const candidate = [...dedup.values()].slice(0, 6);
 
   const photoItems = [
-    ...candidate.map((b) => {
-      const name = simpleName(b.lpla);
-      return {
-        key: `beach:${name}`,
-        queries:
-          BEACH_QUERIES[name] ?? [
-            `${name} beach split croatia`,
-            `${name} split adriatic`,
-            "split croatia beach",
-          ],
-      };
-    }),
+    // Only request Pexels photos for beaches that don't have a local override.
+    ...candidate
+      .filter((b) => !BEACH_LOCAL_PHOTO[simpleName(b.lpla)])
+      .map((b) => {
+        const name = simpleName(b.lpla);
+        return {
+          key: `beach:${name}`,
+          queries:
+            BEACH_QUERIES[name] ?? [
+              `${name} beach split croatia`,
+              `${name} split adriatic`,
+              "split croatia beach",
+            ],
+        };
+      }),
     {
       key: "tonight",
       queries: [
@@ -87,16 +89,20 @@ export default async function DashboardPage() {
 
   const beaches: BeachData[] = candidate.map((b) => {
     const name = simpleName(b.lpla);
-    const photo = photoMap[`beach:${name}`];
+    const local = BEACH_LOCAL_PHOTO[name];
+    const pexels = photoMap[`beach:${name}`];
+    const image =
+      local ??
+      (pexels
+        ? { src: pexels.src.large, alt: pexels.alt || `${name} beach` }
+        : null);
     return {
       name,
       rating: b.locj,
       year: b.lkad,
       lat: b.lat,
       lng: b.lng,
-      image: photo
-        ? { src: photo.src.large, alt: photo.alt || `${name} beach` }
-        : null,
+      image,
     };
   });
 
