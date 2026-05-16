@@ -52,16 +52,27 @@ export default async function MarinaDay() {
       <div className="mx-auto max-w-screen-xl px-5 py-24 sm:px-8 sm:py-32">
         <Header />
 
-        <ol className="mt-16 space-y-24 sm:space-y-32">
-          {hydrated.map((scene, i) => (
-            <Scene
-              key={scene.id}
-              scene={scene}
-              index={i}
-              flip={i % 2 === 1}
-            />
-          ))}
-        </ol>
+        <div className="relative mt-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[21px] top-2 bottom-2 w-px sm:left-[27px]"
+            style={{
+              background:
+                "linear-gradient(180deg, color-mix(in oklch, var(--color-navy) 35%, transparent) 0%, color-mix(in oklch, var(--color-navy) 18%, transparent) 50%, color-mix(in oklch, var(--color-red) 35%, transparent) 100%)",
+            }}
+          />
+
+          <ol className="space-y-20 sm:space-y-28">
+            {hydrated.map((scene, i) => (
+              <Scene
+                key={scene.id}
+                scene={scene}
+                index={i}
+                total={hydrated.length}
+              />
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
@@ -92,8 +103,8 @@ function Header() {
         </h2>
       </div>
       <div className="max-w-[28ch] text-[var(--color-ink-soft)] body-lg">
-        Each block alone would have lost Marina to indifference. Together,
-        they are the operating system of her week.
+        Each block alone would have lost Marina to indifference. Together, they
+        are the operating system of her week.
       </div>
     </div>
   );
@@ -102,110 +113,142 @@ function Header() {
 function Scene({
   scene,
   index,
-  flip,
+  total,
 }: {
   scene: Hydrated;
   index: number;
-  flip: boolean;
+  total: number;
 }) {
+  const dotColor = BLOCK_DOT[scene.block];
   return (
     <MarinaSceneIn>
-      <div
-        className={`grid gap-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] sm:gap-12 ${
-          flip ? "sm:[&>*:first-child]:order-2" : ""
-        }`}
-      >
-        <div className="flex flex-col gap-5">
-          <div
-            className="mono-tag inline-flex items-center gap-2 text-[var(--color-ink-soft)]"
+      <div className="relative pl-12 sm:pl-20">
+        <div
+          aria-hidden
+          className="absolute left-0 top-1 flex h-11 w-11 items-center justify-center rounded-full sm:left-[6px] sm:h-[44px] sm:w-[44px]"
+          style={{
+            background: "var(--color-cream)",
+            border: `2px solid ${dotColor}`,
+            boxShadow:
+              "0 6px 14px -8px color-mix(in oklch, var(--color-ink) 35%, transparent)",
+          }}
+        >
+          <span
             aria-hidden
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 999,
-                background: BLOCK_DOT[scene.block],
-                boxShadow: `0 0 10px ${BLOCK_DOT[scene.block]}`,
-                display: "inline-block",
-              }}
-            />
-            {scene.timeLabel} · {BLOCK_LABEL[scene.block]}
-          </div>
-
-          <h3
-            className="display"
             style={{
-              fontSize: "clamp(1.65rem, 0.5rem + 3.6vw, 3rem)",
-              lineHeight: 1.04,
-              letterSpacing: "-0.018em",
+              width: 10,
+              height: 10,
+              borderRadius: 999,
+              background: dotColor,
+              boxShadow: `0 0 12px ${dotColor}`,
             }}
-          >
-            {scene.title}
-          </h3>
-
-          <blockquote
-            className="border-l-0 pl-0 text-[var(--color-navy)]"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.05rem, 0.7rem + 0.9vw, 1.35rem)",
-              fontStyle: "italic",
-              lineHeight: 1.4,
-            }}
-          >
-            {scene.croatianQuote}
-          </blockquote>
-
-          <p className="body-lg max-w-[58ch] text-[var(--color-ink-soft)]">
-            {scene.beat}
-          </p>
+          />
         </div>
 
-        <div className="relative">
-          {scene.image && (
-            <div className="relative overflow-hidden rounded-[20px]">
-              <Image
-                src={scene.image.src}
-                alt={scene.image.alt}
-                width={960}
-                height={720}
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="aspect-[5/4] w-full object-cover"
-                style={{ filter: "saturate(1.03) contrast(1.03)" }}
-              />
-              <div
+        <div className="grid gap-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] sm:gap-12">
+          <div className="flex flex-col gap-5">
+            <div
+              className="mono-tag flex flex-wrap items-center gap-x-3 gap-y-1 text-[var(--color-ink-soft)]"
+              aria-hidden
+            >
+              <span style={{ color: "var(--color-navy)", fontWeight: 600 }}>
+                {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+              </span>
+              <span
                 aria-hidden
+                className="h-3 w-px"
                 style={{
-                  position: "absolute",
-                  inset: 0,
                   background:
-                    "linear-gradient(180deg, transparent 60%, color-mix(in oklch, var(--color-ink) 35%, transparent) 100%)",
+                    "color-mix(in oklch, var(--color-navy) 30%, transparent)",
                 }}
               />
+              <span>{scene.timeLabel}</span>
+              <span
+                aria-hidden
+                className="h-3 w-px"
+                style={{
+                  background:
+                    "color-mix(in oklch, var(--color-navy) 30%, transparent)",
+                }}
+              />
+              <span style={{ color: dotColor, fontWeight: 600 }}>
+                {BLOCK_LABEL[scene.block]}
+              </span>
             </div>
-          )}
 
-          <div className="pointer-events-none absolute -bottom-6 right-2 sm:-bottom-8 sm:right-6">
-            <Persona
-              character={scene.character}
-              size={180}
-              options={scene.options}
-              scene={scene.id}
-              className="rounded-[24px] bg-[var(--color-cream-shadow)] p-2 shadow-[0_18px_30px_-15px_rgba(11,20,40,0.35)]"
-            />
+            <h3
+              className="display"
+              style={{
+                fontSize: "clamp(1.55rem, 0.5rem + 3vw, 2.6rem)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.018em",
+              }}
+            >
+              {scene.title}
+            </h3>
+
+            <blockquote
+              className="border-l-0 pl-0 text-[var(--color-navy)]"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.05rem, 0.7rem + 0.9vw, 1.3rem)",
+                fontStyle: "italic",
+                lineHeight: 1.4,
+              }}
+            >
+              {scene.croatianQuote}
+            </blockquote>
+
+            <p className="body-lg max-w-[58ch] text-[var(--color-ink-soft)]">
+              {scene.beat}
+            </p>
+          </div>
+
+          <div className="relative">
+            {scene.image && (
+              <div className="relative overflow-hidden rounded-[20px]">
+                <Image
+                  src={scene.image.src}
+                  alt={scene.image.alt}
+                  width={960}
+                  height={720}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="aspect-[5/4] w-full object-cover"
+                  style={{ filter: "saturate(1.03) contrast(1.03)" }}
+                />
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(180deg, transparent 55%, color-mix(in oklch, var(--color-ink) 38%, transparent) 100%)",
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="pointer-events-none absolute -bottom-7 right-3 sm:-bottom-8 sm:right-6">
+              <div
+                style={{
+                  background: "var(--color-cream)",
+                  padding: 8,
+                  borderRadius: 24,
+                  boxShadow:
+                    "0 22px 36px -22px color-mix(in oklch, var(--color-ink) 50%, transparent)",
+                  border: `2px solid ${dotColor}`,
+                }}
+              >
+                <Persona
+                  character={scene.character}
+                  size={150}
+                  options={scene.options}
+                  scene={scene.id}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div
-        aria-hidden
-        className="mt-12 h-px w-full bg-[var(--color-ink)]/10"
-      />
-      <div
-        aria-hidden
-        className="mt-2 mono-tag text-[var(--color-ink-soft)] opacity-60"
-      >
-        Scene {String(index + 1).padStart(2, "0")} / 06
       </div>
     </MarinaSceneIn>
   );

@@ -81,7 +81,7 @@ export default function FunnelClient({ panels }: { panels: PanelData[] }) {
             x,
             display: "flex",
             height: "100%",
-            paddingTop: 80,
+            paddingTop: 96,
           }}
         >
           {panels.map((p, i) => (
@@ -97,8 +97,8 @@ export default function FunnelClient({ panels }: { panels: PanelData[] }) {
 
 function Header() {
   return (
-    <div className="absolute left-5 top-6 z-10 sm:left-10 sm:top-10">
-      <div className="mono-tag flex items-center gap-3 text-[var(--color-cream)]/60">
+    <div className="pointer-events-none absolute left-5 top-5 z-10 flex items-center gap-4 sm:left-10 sm:top-7">
+      <div className="mono-tag flex items-center gap-3 text-[var(--color-cream)]/75">
         <span
           aria-hidden
           className="block h-[1px] w-10"
@@ -106,10 +106,14 @@ function Header() {
         />
         World · 02
       </div>
-      <div className="mt-3 max-w-[28ch] text-[var(--color-cream)]/90 body-lg">
-        Every city above us has been doing some version of this for fifteen
-        years.
-      </div>
+      <span
+        aria-hidden
+        className="hidden h-3 w-px md:inline-block"
+        style={{ background: "color-mix(in oklch, var(--color-cream) 30%, transparent)" }}
+      />
+      <span className="hidden text-[12px] tracking-[0.04em] text-[var(--color-cream)]/70 md:inline-block">
+        Five cities. Fifteen years. One unfinished layer.
+      </span>
     </div>
   );
 }

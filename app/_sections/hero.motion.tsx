@@ -4,14 +4,6 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ease } from "@/lib/motion";
 
-const HEAD_PARTS = [
-  { text: "The", color: "var(--color-cream)" },
-  { text: "orchestrator", color: "var(--color-red-soft)" },
-  { text: "layer", color: "var(--color-cream)" },
-  { text: "for the city", color: "var(--color-cream)" },
-  { text: "of Split.", color: "var(--color-cream)" },
-];
-
 export default function HeroMotion() {
   return (
     <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-screen-xl flex-col justify-center px-5 pt-28 pb-16 sm:px-8 sm:pt-32">
@@ -20,9 +12,9 @@ export default function HeroMotion() {
         animate="show"
         variants={{
           hidden: {},
-          show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+          show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
         }}
-        className="max-w-[20ch] sm:max-w-[18ch]"
+        className="w-full max-w-[60rem]"
       >
         <motion.div
           variants={{
@@ -33,7 +25,7 @@ export default function HeroMotion() {
               transition: { duration: 0.55, ease: ease.outQuart },
             },
           }}
-          className="mono-tag mb-6 inline-flex items-center gap-2 text-[var(--color-cream)]/65"
+          className="mono-tag mb-6 inline-flex items-center gap-2 text-[var(--color-cream)]/75"
         >
           <span
             aria-hidden
@@ -46,28 +38,39 @@ export default function HeroMotion() {
         <h1
           className="display"
           style={{
-            fontSize: "clamp(2.85rem, 0.7rem + 8.5vw, 7.5rem)",
-            lineHeight: 0.96,
-            letterSpacing: "-0.028em",
+            fontSize: "clamp(2.4rem, 0.4rem + 5.5vw, 5.25rem)",
+            lineHeight: 1.02,
+            letterSpacing: "-0.025em",
           }}
         >
-          {HEAD_PARTS.map((part, i) => (
-            <motion.span
-              key={i}
-              variants={{
-                hidden: { opacity: 0, y: 28 },
-                show: {
-                  opacity: 1,
-                  y: 0,
-                  transition: { duration: 0.7, ease: ease.outExpo },
-                },
-              }}
-              className="mr-[0.22em] inline-block"
-              style={{ color: part.color }}
-            >
-              {part.text}
-            </motion.span>
-          ))}
+          <motion.span
+            variants={{
+              hidden: { opacity: 0, y: 28 },
+              show: {
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.7, ease: ease.outExpo },
+              },
+            }}
+            style={{ display: "block" }}
+          >
+            The{" "}
+            <span style={{ color: "var(--color-red-soft)" }}>orchestrator</span>{" "}
+            layer
+          </motion.span>
+          <motion.span
+            variants={{
+              hidden: { opacity: 0, y: 28 },
+              show: {
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.7, ease: ease.outExpo },
+              },
+            }}
+            style={{ display: "block" }}
+          >
+            for the city of Split.
+          </motion.span>
         </h1>
 
         <motion.p
@@ -83,7 +86,8 @@ export default function HeroMotion() {
               },
             },
           }}
-          className="body-lg mt-7 max-w-[44ch] text-[var(--color-cream)]/80"
+          className="body-lg mt-8 max-w-[58ch] text-[var(--color-cream)]/82"
+          style={{ fontSize: "clamp(1.05rem, 0.95rem + 0.55vw, 1.28rem)", lineHeight: 1.55 }}
         >
           One agentic brain wired to every public data port in Split, exposed
           through three human surfaces: a dashboard that reconfigures around
@@ -103,17 +107,29 @@ export default function HeroMotion() {
               },
             },
           }}
-          className="mt-9 flex flex-wrap items-center gap-3"
+          className="mt-10 flex flex-wrap items-center gap-3"
         >
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--color-cream)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition-all hover:scale-[1.025] hover:bg-white active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-full px-7 py-4 text-[15px] font-semibold transition-transform hover:scale-[1.025] active:scale-[0.98]"
+            style={{
+              background: "var(--color-cream)",
+              color: "var(--color-navy)",
+              boxShadow:
+                "0 14px 30px -16px color-mix(in oklch, var(--color-ink) 65%, transparent), 0 2px 0 color-mix(in oklch, var(--color-ink) 18%, transparent) inset",
+            }}
           >
-            See it work →
+            See it work
+            <span aria-hidden>→</span>
           </Link>
           <a
             href="#thesis"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--color-cream)]/30 px-6 py-3 text-sm font-semibold text-[var(--color-cream)] transition-all hover:border-[var(--color-cream)] hover:bg-[var(--color-cream)]/5"
+            className="inline-flex items-center gap-2 rounded-full px-7 py-4 text-[15px] font-semibold transition-colors"
+            style={{
+              border: "1px solid color-mix(in oklch, var(--color-cream) 45%, transparent)",
+              color: "var(--color-cream)",
+              background: "color-mix(in oklch, var(--color-cream) 4%, transparent)",
+            }}
           >
             Read the thesis
           </a>
@@ -127,7 +143,7 @@ export default function HeroMotion() {
               transition: { duration: 0.6, delay: 1.1 },
             },
           }}
-          className="mt-16 flex items-center gap-6 text-[var(--color-cream)]/55"
+          className="mt-14 flex flex-wrap items-center gap-x-6 gap-y-3 text-[var(--color-cream)]/65"
         >
           <span className="mono-tag">live</span>
           <DataDot label="DHMZ" color="var(--color-red-soft)" />

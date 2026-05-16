@@ -124,24 +124,35 @@ export default function PrivacyCta() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--color-cream)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition-all hover:scale-[1.025] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-4 text-[15px] font-semibold transition-transform hover:scale-[1.025] active:scale-[0.98]"
+              style={{
+                background: "var(--color-cream)",
+                color: "var(--color-navy)",
+                boxShadow:
+                  "0 18px 36px -18px color-mix(in oklch, var(--color-ink) 50%, transparent)",
+              }}
             >
-              Open the dashboard →
+              Open the dashboard
+              <span aria-hidden>→</span>
             </Link>
             <Link
               href="/dashboard/chat"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--color-cream)]/40 px-6 py-3 text-sm font-semibold text-[var(--color-cream)] hover:bg-[var(--color-cream)]/10"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-4 text-[15px] font-semibold transition-transform hover:scale-[1.025] active:scale-[0.98]"
+              style={{
+                background: "var(--color-navy)",
+                color: "var(--color-cream)",
+                boxShadow:
+                  "0 18px 36px -22px color-mix(in oklch, var(--color-navy) 90%, transparent)",
+              }}
             >
               Try the chat surface
             </Link>
           </div>
         </div>
 
-        <footer
-          className="mx-auto flex max-w-screen-xl flex-col items-start justify-between gap-6 px-5 pb-10 text-xs uppercase tracking-[0.16em] opacity-70 sm:flex-row sm:items-center sm:px-8"
-        >
+        <footer className="mx-auto flex max-w-screen-xl flex-col items-start justify-between gap-6 px-5 pb-10 text-xs uppercase tracking-[0.16em] opacity-80 sm:flex-row sm:items-center sm:px-8">
           <span>Splitko · 2026 · built for the city</span>
-          <span className="flex gap-6">
+          <span className="flex flex-wrap gap-6">
             <a href="#thesis" className="hover:opacity-100">
               Thesis
             </a>

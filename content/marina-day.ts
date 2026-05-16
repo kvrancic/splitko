@@ -21,7 +21,11 @@ export type MarinaScene = {
   imageAlt: string;
   /** The DiceBear character to render in this scene. */
   character: Character;
-  /** Per-scene DiceBear overrides — clothing, expression, accessories. */
+  /**
+   * Per-scene DiceBear overrides. Only `mouth` (expression) and optionally
+   * `clothingColor` may vary — skin / hair / eyes are locked in
+   * `lib/dicebear.ts` so the character reads as the same person every time.
+   */
   options?: DicebearOptions;
 };
 
@@ -42,7 +46,7 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "Quiet morning in a Split alley near Lučac.",
     character: "marina",
-    options: { hair: "long", mood: "happy" },
+    options: { mouth: "smile", clothingColor: "8a9bb0" },
   },
   {
     id: "11-00-streetlight",
@@ -59,15 +63,15 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "A streetlight near a Split crosswalk.",
     character: "marina",
-    options: { mood: "surprised" },
+    options: { mouth: "surprise", clothingColor: "8a9bb0" },
   },
   {
     id: "14-00-whatsapp",
     timeLabel: "Tue / 14:00",
-    title: "WhatsApp from Luka: żnjan or Kašjuni?",
-    croatianQuote: "“Idemo na żnjan poslije posla?”",
+    title: "WhatsApp from Luka: Žnjan or Kašjuni?",
+    croatianQuote: "“Idemo na Žnjan poslije posla?”",
     beat:
-      "Marina asks Splitko on WhatsApp. The same brain answers, with the same memory of who she is — żnjan vs Kašjuni at 17:30 given sea, crowd, and wind. Recommends Kašjuni. Suggests the bus because the lot will fill.",
+      "Marina asks Splitko on WhatsApp. The same brain answers, with the same memory of who she is — Žnjan vs Kašjuni at 17:30 given sea, crowd, and wind. Recommends Kašjuni. Suggests the bus because the lot will fill.",
     block: "whatsapp",
     imageQuery: [
       "kasjuni beach split",
@@ -76,7 +80,7 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "Pine-shaded coast near Kašjuni.",
     character: "marina",
-    options: { hair: "longCurly", mood: "happy" },
+    options: { mouth: "bigSmile", clothingColor: "8a9bb0" },
   },
   {
     id: "18-00-baka",
@@ -93,7 +97,7 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "A Dalmatian sitting room with afternoon light.",
     character: "anka",
-    options: { hair: "shortCurly", mood: "happy" },
+    options: { mouth: "smile", clothingColor: "5a615f" },
   },
   {
     id: "week-later-marketplace",
@@ -110,7 +114,7 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "A balcony above the Bačvice bay.",
     character: "brother",
-    options: { hair: "buzzcut", mood: "happy" },
+    options: { mouth: "smile", clothingColor: "344b6b" },
   },
   {
     id: "saturday-cultural",
@@ -127,6 +131,6 @@ export const MARINA_DAY: MarinaScene[] = [
     ],
     imageAlt: "Diocletian’s cellars lit warm at night.",
     character: "marina",
-    options: { hair: "long", mood: "happy", clothingColor: "1e3a8a" },
+    options: { mouth: "bigSmile", clothingColor: "1e3a8a" },
   },
 ];
